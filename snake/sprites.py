@@ -1,7 +1,7 @@
 import pygame as pg
 
-from tools.tile import get_center_tile_pos, get_random_tile_pos
 from tools.resource import get_resource_path
+from tools.tile import get_center_tile_pos, get_random_tile_pos
 
 TILE_SIZE = 32, 32
 SNAKE_COLOR = 224, 164, 54
@@ -87,22 +87,46 @@ class SnakePart(BaseSprite):
                          anchor=anchor)
 
     def move(self) -> None:
-        """Move the snake sprite in the direction it is facing by one pixel."""
+        """Move the snake sprite in the direction it is facing by one tile size."""
         match self.direction.lower():
             case "up":
-                self.rect.y -= TILE_SIZE[1]
+                self.pos = (self.rect.x, self.rect.y - TILE_SIZE[1])
             case "down":
-                self.rect.y += TILE_SIZE[1]
+                self.pos = (self.rect.x, self.rect.y + TILE_SIZE[1])
             case "left":
-                self.rect.x -= TILE_SIZE[0]
+                self.pos = (self.rect.x - TILE_SIZE[0], self.rect.y)
             case "right":
-                self.rect.x += TILE_SIZE[0]
+                self.pos = (self.rect.x + TILE_SIZE[0], self.rect.y)
             case _:
                 raise ValueError(f"Invalid direction: '{self.direction}'.")
 
     def turn(self, direction: str) -> None:
-        """Turn the snake sprite to face the given direction."""
+        """Turn the snake sprite to face the given direction. Prevents the snake from doing a u-turn."""
+        match direction, self.direction:
+            case "up", "left":
+                self.rotate(-90)
+            case "up", "right":
+                self.rotate(90)
+            case "down", "left":
+                self.rotate(90)
+            case "down", "right":
+                self.rotate(-90)
+            case "left", "up":
+                self.rotate(90)
+            case "left", "down":
+                self.rotate(-90)
+            case "right", "up":
+                self.rotate(-90)
+            case "right", "down":
+                self.rotate(90)
+            case _, _:
+                return
         self.direction = direction
+
+    def rotate(self, degrees: int) -> None:
+        """Rotates the sprite a given degree. Positive degrees is clockwise, negative is counter-clockwise."""
+        self.image = pg.transform.rotate(self.image, degrees)
+        self.rect = self.get_rect(self.pos, self._anchor)
 
 
 class Head(SnakePart):
