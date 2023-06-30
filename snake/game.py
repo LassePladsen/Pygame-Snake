@@ -1,7 +1,6 @@
 import pygame as pg
-from random import randint
 
-from tools.get_resource_path import get_resource_path
+from tools.resource import get_resource_path
 import sprites
 
 

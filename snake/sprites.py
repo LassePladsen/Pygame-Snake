@@ -1,8 +1,7 @@
 import pygame as pg
 
-from tools.get_center_tile_pos import get_center_tile_pos
-from tools.get_resource_path import get_resource_path
-from tools.get_random_tile_pos import get_random_tile_pos
+from tools.tile import get_center_tile_pos, get_random_tile_pos
+from tools.resource import get_resource_path
 
 TILE_SIZE = 32, 32
 SNAKE_COLOR = 224, 164, 54
