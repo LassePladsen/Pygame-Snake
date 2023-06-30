@@ -1,0 +1,173 @@
+import pygame as pg
+
+from tools.get_center_tile_pos import get_center_tile_pos
+from tools.get_resource_path import get_resource_path
+from tools.get_random_tile_pos import get_random_tile_pos
+
+TILE_SIZE = 32, 32
+SNAKE_COLOR = 224, 164, 54
+FOOD_SIZE = TILE_SIZE
+
+
+class SpriteGroup(pg.sprite.Group):
+    """Sprite group class."""
+
+    def __init__(self):
+        super().__init__()
+
+    def move(self):
+        """Move all sprites in the group by one tile size in the direction the sprite is facing."""
+        for sprite in self.sprites():
+            if not isinstance(sprite, SnakePart):  # dont move the food
+                continue
+            sprite.move()
+
+
+class BaseSprite(pg.sprite.Sprite):
+    """Base sprite class for inheritance."""
+    image: pg.surface.Surface = pg.Surface((0, 0))  # placeholder image surface
+    rect: pg.rect.Rect = pg.Rect(0, 0, 0, 0)  # placeholder rect
+
+    def __init__(self,
+                 sprite_type: str,
+                 size: tuple[int, int],
+                 pos: tuple[int, int],
+                 anchor: str = "center") -> None:
+        pg.sprite.Sprite.__init__(self)
+        self._anchor = anchor
+        self.type = sprite_type
+        self.image = pg.transform.scale(self.image, size)
+        self.pos = pos
+        # self.rect gets set in the pos setter
+
+    @property
+    def pos(self) -> tuple[int, int]:
+        """Returns the sprites position."""
+        return self._pos
+
+    @pos.setter
+    def pos(self, new_pos: tuple[int, int]) -> None:
+        """Sets the position attribute to the center of the nearest tile center,
+         and also updates the sprites rect position with this new position."""
+        self._pos = get_center_tile_pos(new_pos, TILE_SIZE)
+        self.rect = self.get_rect(self._pos, self._anchor)
+
+    def get_rect(self,
+                 pos: tuple[int, int],
+                 anchor: str = "center") -> pg.rect.Rect:
+        """Returns a sprite rect at a given position."""
+        match anchor:
+            case "topleft":
+                return self.image.get_rect(topleft=pos)
+            case "topright":
+                return self.image.get_rect(topright=pos)
+            case "bottomleft":
+                return self.image.get_rect(bottomleft=pos)
+            case "bottomright":
+                return self.image.get_rect(bottomright=pos)
+            case "center" | _:
+                return self.image.get_rect(center=pos)
+
+
+class SnakePart(BaseSprite):
+    """Base snake body part sprite class for inheritance."""
+
+    def __init__(self,
+                 sprite_type: str,
+                 pos: tuple[int, int],
+                 anchor: str = "center",
+                 direction: str = "right") -> None:
+        match direction.lower():
+            case "up" | "down" | "left" | "right":
+                self.direction = direction
+            case _:
+                raise ValueError(f"Invalid direction: '{direction}'.")
+        super().__init__(sprite_type=sprite_type,
+                         size=TILE_SIZE,
+                         pos=pos,
+                         anchor=anchor)
+
+    def move(self) -> None:
+        """Move the snake sprite in the direction it is facing by one pixel."""
+        match self.direction.lower():
+            case "up":
+                self.rect.y -= TILE_SIZE[1]
+            case "down":
+                self.rect.y += TILE_SIZE[1]
+            case "left":
+                self.rect.x -= TILE_SIZE[0]
+            case "right":
+                self.rect.x += TILE_SIZE[0]
+            case _:
+                raise ValueError(f"Invalid direction: '{self.direction}'.")
+
+    def turn(self, direction: str) -> None:
+        """Turn the snake sprite to face the given direction."""
+        self.direction = direction
+
+
+class Head(SnakePart):
+    """Snake head sprite class."""
+
+    def __init__(self,
+                 pos: tuple[int, int],
+                 anchor: str = "center",
+                 direction: str = "right") -> None:
+        img_path = get_resource_path(r"..\assets\images\head.png")
+        self.image = pg.image.load(img_path)
+        self.rect = self.image.get_rect()
+        super().__init__(sprite_type="head",
+                         pos=pos,
+                         anchor=anchor,
+                         direction=direction)
+
+
+class Tail(SnakePart):
+    """Snake tail sprite class."""
+
+    def __init__(self,
+                 pos: tuple[int, int],
+                 anchor: str = "center",
+                 direction: str = "right") -> None:
+        img_path = get_resource_path(r"..\assets\images\tail.png")
+        self.image = pg.image.load(img_path)
+        self.rect = self.image.get_rect()
+        super().__init__(sprite_type="tail",
+                         pos=pos,
+                         anchor=anchor,
+                         direction=direction)
+
+
+class Body(SnakePart):
+    """Snake body sprite class."""
+
+    def __init__(self,
+                 pos: tuple[int, int],
+                 anchor: str = "center",
+                 direction: str = "right") -> None:
+        self.image = pg.Surface(TILE_SIZE)
+        self.image.fill(SNAKE_COLOR)
+        self.rect = self.image.get_rect()
+        super().__init__(sprite_type="body",
+                         pos=pos,
+                         anchor=anchor,
+                         direction=direction)
+
+
+class Food(BaseSprite):
+    """Food sprite class."""
+
+    def __init__(self,
+                 screen_size: tuple[int, int],
+                 max_dist: int,
+                 head_pos: tuple[int, int]) -> None:
+        img_path = get_resource_path(r"..\assets\images\food.png")
+        self.image = pg.image.load(img_path)
+        self.rect = self.image.get_rect()
+        pos = get_random_tile_pos(screen_size,
+                                  TILE_SIZE,
+                                  max_dist,
+                                  head_pos)
+        super().__init__(sprite_type="food",
+                         size=FOOD_SIZE,
+                         pos=pos)
