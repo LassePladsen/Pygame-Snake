@@ -4,7 +4,8 @@ def main() -> None:
     game = SnakeGame(screen_size=(896, 640),
                      screen_title="Snake",
                      fps=3)
+    game.grow(1)
     game.run()
-
+5
 if __name__ == '__main__':
     main()

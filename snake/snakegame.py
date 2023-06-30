@@ -6,6 +6,7 @@ from tools.resource import get_resource_path
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 def quit_game() -> None:
     """Quits the game."""
     pg.quit()
@@ -28,52 +29,68 @@ class SnakeGame:
         pg.display.set_icon(pg.image.load(get_resource_path(r"..\assets\images\icon.png")))
 
         x, y = int(screen_size[0] / 2) - 1 * sprites.TILE_SIZE[0], int(screen_size[1] / 2)
-        self.snake_length = 0
-        self._head = sprites.Head((x, y))
         self._tail = sprites.Tail((x - sprites.TILE_SIZE[0], y))
+        self._head = sprites.Head((x, y), next_segment=self._tail)
+        self.snake_segments: list[sprites.SnakeSegment | sprites.Food] = [self._head, self._tail]
+        # self.snake_length gets set as a property of the above lists length
 
         # Create food sprite at random position no closer than 8 tiles from the snake's head.
         self._food = sprites.Food(screen_size=self.screen_size,
                                   max_dist=8,
                                   head_pos=self._head.pos)
         self._sprite_group = sprites.SpriteGroup()
-        self._add_sprites(self._head, self._tail, self._food)
+        self._add_sprites([self._head, self._tail, self._food])
 
-    def _add_sprites(self, *sprites_: sprites.SnakePart | sprites.Food) -> None:
-        """Add given sprites to the sprite group."""
+    @property
+    def snake_length(self) -> int:
+        """Returns the length of the snake."""
+        return len(self.snake_segments)
+
+    def _add_sprites(self, sprite_list: list[sprites.SnakeSegment | sprites.Food]) -> None:
+        """Add given sprites to the sprite group and list."""
         # noinspection PyTypeChecker
-        self._sprite_group.add(sprites_)
-        self.snake_length += len(sprites_)
+        self._sprite_group.add(sprite_list)
+        self.snake_segments += sprite_list
 
-    def _add_body_sprite(self, pos: tuple[int, int]) -> None:
-        """Creates a new body sprite and adds it to the sprite group."""
-        new = sprites.Body(pos)
-        self._add_sprites(new)
-
-    def grow_snake(self, amount: int) -> None:
+    def grow(self, amount: int) -> None:
         """Grows the snake by a given amount of tile sizes."""
         # noinspection PyPropertyAccess
+        if amount == 0:
+            return
+        if amount < 0:
+            raise ValueError("Growing amount must be greater than 0.")
         x, y = self._tail.pos
         size = sprites.TILE_SIZE
+        tail = self.snake_segments.pop()
+        new_sprites = []
+        prev_segment = tail
         match self._head.direction:
             case "right":
                 self._move_tail(x=-amount * size[0])
-                for i in range(amount):
-                    self._add_body_sprite((x - i * size[0], y))
+                for i in range(-amount+1, 1):
+                    prev_segment = sprites.Body((x + i * size[0], y), prev_segment=prev_segment)
+                    new_sprites.append(prev_segment)
             case "left":
                 self._move_tail(x=amount * size[0])
-                for i in range(amount):
-                    self._add_body_sprite((x + i * size[0], y))
+                for i in range(-amount+1, 0):
+                    prev_segment = sprites.Body((x - i * size[0], y), prev_segment=prev_segment)
+                    new_sprites.append(prev_segment)
             case "up":
                 self._move_tail(y=amount * size[1])
-                for i in range(amount):
-                    self._add_body_sprite((x, y + i * size[1]))
+                for i in range(-amount+1, 0):
+                    prev_segment = sprites.Body((x, y - i * size[1]), prev_segment=prev_segment)
+                    new_sprites.append(prev_segment)
             case "down":
-                self._move_tail(y=-amount * size[1])
-                for i in range(amount):
-                    self._add_body_sprite((x, y - i * size[1]))
+                self._move_tail(y=-amount * size[0])
+                for i in range(-amount+1, 0):
+                    prev_segment = sprites.Body((x, y + i * size[1]), prev_segment=prev_segment)
+                    new_sprites.append(prev_segment)
+        self._add_sprites(new_sprites)
+        self.snake_segments.append(tail)
 
     def _move_tail(self, x: int = 0, y: int = 0):
+        logging.debug(f"Moving tail by {x, y}. Old pos = {self._tail.pos}, New pos ="
+                      f" {self._tail.pos[0] + x, self._tail.pos[1] + y}.")
         self._tail.pos = self._tail.pos[0] + x, self._tail.pos[1] + y
 
     def pause(self) -> None:
@@ -128,6 +145,6 @@ class SnakeGame:
             screen.blit(background, (0, 0))
             self._handle_events(pg.event.get())
             if not self._pause:
-                self._sprite_group.move()
+                self._head.move()
             self._sprite_group.draw(screen)
             pg.display.update()

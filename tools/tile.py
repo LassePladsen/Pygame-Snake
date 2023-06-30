@@ -24,8 +24,11 @@ def get_random_tile_pos(screen_size: tuple[int, int],
 def get_center_tile_pos(pos: tuple[int, int], tile_size: tuple[int, int]) -> tuple[int, int]:
     """Returns the center position of the nearest tile with given size."""
     x, y = pos
+    center_x, center_y = x, y  # default value
     width, height = tile_size
     # Calculate the nearest tile center
-    center_x = round(x / width) * width + width // 2
-    center_y = round(y / height) * height + height // 2
+    if (x+width/2) % width != 0:
+        center_x = round(x / width) * width + width // 2
+    if (y+height/2) % height != 0:
+        center_y = round(y / height) * height + height // 2
     return center_x, center_y

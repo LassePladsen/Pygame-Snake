@@ -3,6 +3,7 @@ import pygame as pg
 from tools.resource import get_resource_path
 from tools.tile import get_center_tile_pos, get_random_tile_pos
 
+# Constants:
 TILE_SIZE = 32, 32
 SNAKE_COLOR = 224, 164, 54
 FOOD_SIZE = TILE_SIZE
@@ -17,7 +18,7 @@ class SpriteGroup(pg.sprite.Group):
     def move(self):
         """Move all sprites in the group by one tile size in the direction the sprite is facing."""
         for sprite in self.sprites():
-            if not isinstance(sprite, SnakePart):  # dont move the food
+            if not isinstance(sprite, SnakeSegment):  # dont move the food
                 continue
             sprite.move()
 
@@ -36,7 +37,7 @@ class BaseSprite(pg.sprite.Sprite):
         self._anchor = anchor
         self.type = sprite_type
         self.image = pg.transform.scale(self.image, size)
-        self.pos = pos
+        self.pos = get_center_tile_pos(pos, TILE_SIZE)
         # self.rect gets set in the pos setter
 
     @property
@@ -48,7 +49,7 @@ class BaseSprite(pg.sprite.Sprite):
     def pos(self, new_pos: tuple[int, int]) -> None:
         """Sets the position attribute to the center of the nearest tile center,
          and also updates the sprites rect position with this new position."""
-        self._pos = get_center_tile_pos(new_pos, TILE_SIZE)
+        self._pos = new_pos
         self.rect = self.get_rect(self._pos, self._anchor)
 
     def get_rect(self,
@@ -67,20 +68,26 @@ class BaseSprite(pg.sprite.Sprite):
             case "center" | _:
                 return self.image.get_rect(center=pos)
 
+    def move(self) -> None:
+        """Placeholder move method for inheritance."""
+        pass
 
-class SnakePart(BaseSprite):
+
+class SnakeSegment(BaseSprite):
     """Base snake body part sprite class for inheritance."""
 
     def __init__(self,
                  sprite_type: str,
                  pos: tuple[int, int],
                  anchor: str = "center",
-                 direction: str = "right") -> None:
+                 direction: str = "right",
+                 next_segment: BaseSprite = None) -> None:
         match direction.lower():
             case "up" | "down" | "left" | "right":
                 self.direction = direction
             case _:
                 raise ValueError(f"Invalid direction: '{direction}'.")
+        self.next_segment = next_segment
         super().__init__(sprite_type=sprite_type,
                          size=TILE_SIZE,
                          pos=pos,
@@ -88,6 +95,7 @@ class SnakePart(BaseSprite):
 
     def move(self) -> None:
         """Move the snake sprite in the direction it is facing by one tile size."""
+        previous_pos = self.pos
         match self.direction.lower():
             case "up":
                 self.pos = (self.rect.x, self.rect.y - TILE_SIZE[1])
@@ -99,6 +107,10 @@ class SnakePart(BaseSprite):
                 self.pos = (self.rect.x + TILE_SIZE[0], self.rect.y)
             case _:
                 raise ValueError(f"Invalid direction: '{self.direction}'.")
+        # move next segment
+        if self.next_segment is not None:
+            self.next_segment.move()
+            self.next_segment.pos = previous_pos
 
     def turn(self, direction: str) -> None:
         """Turn the snake sprite to face the given direction. Prevents the snake from doing a u-turn."""
@@ -129,52 +141,58 @@ class SnakePart(BaseSprite):
         self.rect = self.get_rect(self.pos, self._anchor)
 
 
-class Head(SnakePart):
+class Head(SnakeSegment):
     """Snake head sprite class."""
 
     def __init__(self,
                  pos: tuple[int, int],
                  anchor: str = "center",
-                 direction: str = "right") -> None:
+                 direction: str = "right",
+                 next_segment: SnakeSegment = None) -> None:
         img_path = get_resource_path(r"..\assets\images\head.png")
         self.image = pg.image.load(img_path)
         self.rect = self.image.get_rect()
         super().__init__(sprite_type="head",
                          pos=pos,
                          anchor=anchor,
-                         direction=direction)
+                         direction=direction,
+                         next_segment=next_segment)
 
 
-class Tail(SnakePart):
+class Tail(SnakeSegment):
     """Snake tail sprite class."""
 
     def __init__(self,
                  pos: tuple[int, int],
                  anchor: str = "center",
-                 direction: str = "right") -> None:
+                 direction: str = "right",
+                 next_segment: SnakeSegment = None) -> None:
         img_path = get_resource_path(r"..\assets\images\tail.png")
         self.image = pg.image.load(img_path)
         self.rect = self.image.get_rect()
         super().__init__(sprite_type="tail",
                          pos=pos,
                          anchor=anchor,
-                         direction=direction)
+                         direction=direction,
+                         next_segment=next_segment)
 
 
-class Body(SnakePart):
+class Body(SnakeSegment):
     """Snake body sprite class."""
 
     def __init__(self,
                  pos: tuple[int, int],
                  anchor: str = "center",
-                 direction: str = "right") -> None:
+                 direction: str = "right",
+                 prev_segment: SnakeSegment = None) -> None:
         self.image = pg.Surface(TILE_SIZE)
         self.image.fill(SNAKE_COLOR)
         self.rect = self.image.get_rect()
         super().__init__(sprite_type="body",
                          pos=pos,
                          anchor=anchor,
-                         direction=direction)
+                         direction=direction,
+                         next_segment=prev_segment)
 
 
 class Food(BaseSprite):
