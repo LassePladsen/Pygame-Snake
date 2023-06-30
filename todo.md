@@ -1,5 +1,6 @@
 ### TODO: 
 - Fix bug where you can go back on yourself if you press fast enough.- Add the eating mechanic.
+- Fix bug where body parts spawn wrong seeminly random places with grow().
 - Add the collision mechanic.
 - Add death mechanic.
 - Add a game over screen.
