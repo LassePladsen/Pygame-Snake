@@ -6,6 +6,5 @@ def main() -> None:
                      fps=3)
     game.grow(1)
     game.run()
-5
 if __name__ == '__main__':
     main()
