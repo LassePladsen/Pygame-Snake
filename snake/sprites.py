@@ -35,13 +35,11 @@ class BaseSprite(pg.sprite.Sprite):
     rect: pg.rect.Rect = pg.Rect(0, 0, 0, 0)  # placeholder rect
 
     def __init__(self,
-                 sprite_type: str,
                  size: tuple[int, int],
                  pos: tuple[int, int],
                  anchor: str = "center") -> None:
         pg.sprite.Sprite.__init__(self)
         self._anchor = anchor
-        self.type = sprite_type
         self.image = pg.transform.scale(self.image, size)
         self.pos = get_center_tile_pos(pos, TILE_SIZE)
         # self.rect gets set in the pos setter
@@ -80,7 +78,6 @@ class SnakeSegment(BaseSprite):
     """Base snake body part sprite class for inheritance."""
 
     def __init__(self,
-                 sprite_type: str,
                  pos: tuple[int, int],
                  anchor: str = "center",
                  direction: str = "right",
@@ -90,11 +87,10 @@ class SnakeSegment(BaseSprite):
                 self._direction = direction
             case _:
                 raise ValueError(f"Invalid direction: '{direction}'.")
-        self.prev_segment = prev_segment
-        super().__init__(sprite_type=sprite_type,
-                         size=TILE_SIZE,
+        super().__init__(size=TILE_SIZE,
                          pos=pos,
                          anchor=anchor)
+        self.prev_segment = prev_segment
 
     def move(self) -> None:
         """Move the snake sprite in the direction it is facing by one tile size."""
@@ -129,13 +125,13 @@ class SnakeSegment(BaseSprite):
             "left": {"up": -90, "down": 90},
             "right": {"up": 90, "down": -90},
         }
-        rotation_angle = allowed_turns.get(self._direction, {}).get(direction)
+        rotation_angle = allowed_turns.get(self._direction).get(direction)
         if rotation_angle is not None:
-            self._rotate(rotation_angle)
+            self.rotate(rotation_angle)
             self._direction = direction
 
 
-    def _rotate(self, degrees: int) -> None:
+    def rotate(self, degrees: int) -> None:
         """Rotates the sprite a given degree. Positive degrees is clockwise, negative is counter-clockwise."""
         self.image = pg.transform.rotate(self.image, degrees)
         self.rect = self.get_rect(self.pos, self._anchor)
@@ -149,13 +145,12 @@ class Head(SnakeSegment):
                  anchor: str = "center",
                  direction: str = "right",
                  prev_segment: SnakeSegment = None) -> None:
-        self.image = load_image(get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
-        self.rect = self.image.get_rect()
-        super().__init__(sprite_type="head",
-                         pos=pos,
+        super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
                          prev_segment=prev_segment)
+        self.image = load_image(get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
+        self.rect = self.image.get_rect()
 
 
 class Tail(SnakeSegment):
@@ -165,14 +160,22 @@ class Tail(SnakeSegment):
                  pos: tuple[int, int],
                  anchor: str = "center",
                  direction: str = "right",
-                 prev_segment: SnakeSegment = None) -> None:
+                 next_segment: SnakeSegment = None) -> None:
         self.image = load_image(get_resource_path(r"..\assets\images\tail.png"), TILE_SIZE)
         self.rect = self.image.get_rect()
-        super().__init__(sprite_type="tail",
-                         pos=pos,
+        super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
-                         prev_segment=prev_segment)
+                         prev_segment=None)
+        self.next_segment = next_segment
+
+    def move(self) -> None:
+        """Move the tail sprite in the direction it is facing by one tile size,
+         and then rotate its direction to the next segments direction such that the next move follows it."""
+        if self.next_segment is None:
+            return
+        super().move()
+        self.direction = self.next_segment.direction
 
 
 class Body(SnakeSegment):
@@ -183,16 +186,15 @@ class Body(SnakeSegment):
                  anchor: str = "center",
                  direction: str = "right",
                  prev_segment: SnakeSegment = None) -> None:
-        self.image = pg.Surface(TILE_SIZE)
-        self.image.fill(SNAKE_COLOR)
-        self.rect = self.image.get_rect()
-        super().__init__(sprite_type="body",
-                         pos=pos,
+        super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
                          prev_segment=prev_segment)
+        self.image = pg.Surface(TILE_SIZE)
+        self.image.fill(SNAKE_COLOR)
+        self.rect = self.image.get_rect()
 
-    def _rotate(self, degrees: any) -> None:
+    def rotate(self, degrees: any) -> None:
         """No rotation needed for the body as it is a colored square sprite."""
         pass
 
@@ -204,12 +206,11 @@ class Food(BaseSprite):
                  screen_size: tuple[int, int],
                  max_dist: int,
                  head_pos: tuple[int, int]) -> None:
-        self.image = load_image(get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
-        self.rect = self.image.get_rect()
         pos = get_random_tile_pos(screen_size,
                                   TILE_SIZE,
                                   max_dist,
                                   head_pos)
-        super().__init__(sprite_type="food",
-                         size=FOOD_SIZE,
+        super().__init__(size=FOOD_SIZE,
                          pos=pos)
+        self.image = load_image(get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
+        self.rect = self.image.get_rect()

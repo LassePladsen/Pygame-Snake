@@ -1,6 +1,5 @@
 ### TODO: 
-- Fix tail changing direction when it should.
-- Add the eating mechanic.
+- Fix bug where you can go back on yourself if you press fast enough.- Add the eating mechanic.
 - Add the collision mechanic.
 - Add death mechanic.
 - Add a game over screen.

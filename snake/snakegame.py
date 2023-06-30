@@ -4,6 +4,7 @@ import sys
 import pygame as pg
 
 import sprites
+from queue_ import Queue
 from tools.resource import get_resource_path
 
 logging.basicConfig(level=logging.DEBUG)
@@ -44,6 +45,7 @@ class SnakeGame:
         x, y = int(screen_size[0] / 2) - 1 * sprites.TILE_SIZE[0], int(screen_size[1] / 2)
         self._tail = sprites.Tail((x - sprites.TILE_SIZE[0], y))
         self._head = sprites.Head((x, y), prev_segment=self._tail)
+        self._tail.next_segment = self._head
         self.snake_segments = []
         # self.snake_length gets set as a property of the above lists length
 
@@ -87,10 +89,12 @@ class SnakeGame:
         dx, dy = movement_values[self._head.direction]  # movement steps
         self._move_tail(dx, dy)
         for i in range(-amount + 1, 1):
-            prev_segment = sprites.Body((x + i * dx, y + i * dy), prev_segment=prev_segment)
+            prev_segment = sprites.Body(pos=(x + i * dx, y + i * dy),
+                                        prev_segment=prev_segment)
             new_sprites.append(prev_segment)
         self._add_sprites(new_sprites[::-1])  # reverse the list to add the segments in the correct order
         self._head.prev_segment = self.snake_segments[1]
+        tail.next_segment = self.snake_segments[-1]
         self.snake_segments.append(tail)
 
     def _move_tail(self, dx: int = 0, dy: int = 0):
@@ -142,10 +146,17 @@ class SnakeGame:
         screen = pg.display.set_mode(self.screen_size)
         clock = pg.time.Clock()
         background = pg.image.load(get_resource_path(r"..\assets\images\background.png"))
+        queue = Queue()
         while True:
             clock.tick(self.fps)
+            queue.handle()
             logging.debug(f"[head.pos, tail.pos] = [{self._head.pos}, {self._tail.pos}]")
             self._handle_events(pg.event.get())
             if not self._pause:
                 self._head.move()
+                for segment in self.snake_segments[1:]:
+                    if segment.direction != self._head.direction:
+                        queue.add(self.snake_length-2, [(segment, f"obj.direction = '{self._head.direction}'")])
             self._update_screen(screen, background)
+            queue.update()
+
