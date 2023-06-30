@@ -1,5 +1,8 @@
 ### TODO: 
+- Fix tail changing direction when it should.
 - Add the eating mechanic.
+- Add the collision mechanic.
+- Add death mechanic.
 - Add a game over screen.
 - Add a restart button.
 - Add a pause button.
@@ -9,3 +12,4 @@
 - Add audio volume bar.
 - Implement config.ini file and parser.
 - (Add a main menu?)
+- (Add a difficulty system with fps and score multiplier?)
