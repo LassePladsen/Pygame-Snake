@@ -219,6 +219,4 @@ class SnakeGame:
                 self.queue.update()
                 self._head.move()
                 self.handle_collision()
-            print(self.snake_length, [(s.pos, s.direction) for s in self.snake_segments])
-            print([s.prev_segment.pos for s in self.snake_segments[:-1]])
             self._update_screen(screen, background)
