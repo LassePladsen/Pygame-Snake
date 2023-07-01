@@ -1,10 +1,9 @@
 from snakegame import SnakeGame
 
 def main() -> None:
-    game = SnakeGame(screen_size=(896, 640),
+    game = SnakeGame(screen_size=(640, 480),
                      title="Snake",
-                     fps=10)
-    game.grow()
+                     fps=13)
     game.run()
 
 if __name__ == '__main__':

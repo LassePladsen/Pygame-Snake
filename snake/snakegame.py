@@ -7,7 +7,7 @@ import sprites
 from queue_ import Queue
 from tools.resource import get_resource_path
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def quit_game() -> None:
@@ -35,6 +35,12 @@ class SnakeGame:
                  title: str,
                  fps: int) -> None:
         pg.init()
+        if screen_size[0] > 896 or screen_size[1] > 640:
+            raise ValueError("Maximum screen size is 896x640.")
+        elif screen_size[0] < 290 or screen_size[1] < 290:
+            raise ValueError("Minimum screen size is 290x290")
+        if any((screen_size[i] % sprites.TILE_SIZE[i]) != 0 for i in range(2)):
+            raise ValueError(f"Screen size must be a multiple of the tile size: '{sprites.TILE_SIZE}'.")
         self.screen_size = screen_size
         self.screen_title = title
         self.fps = fps
