@@ -1,7 +1,6 @@
 import pygame as pg
 
-from tools.resource import get_resource_path
-from tools.tile import get_center_tile_pos, get_random_tile_pos
+from tools import tile, resource
 
 # Constants:
 TILE_SIZE = 32, 32
@@ -41,7 +40,7 @@ class BaseSprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         self._anchor = anchor
         self.image = pg.transform.scale(self.image, size)
-        self.pos = get_center_tile_pos(pos, TILE_SIZE)
+        self.pos = tile.get_center_tile_pos(pos, TILE_SIZE)
         # self.rect gets set in the pos setter
 
     @property
@@ -54,7 +53,7 @@ class BaseSprite(pg.sprite.Sprite):
         """Sets the position attribute to the center of the nearest tile center,
          and also updates the sprites rect position with this new position."""
         self._pos = new_pos
-        self.rect = self.get_rect(self._pos, self._anchor)
+        self.rect = self.get_rect(new_pos, self._anchor)
 
     def get_rect(self,
                  pos: tuple[int, int],
@@ -106,10 +105,29 @@ class SnakeSegment(BaseSprite):
                 self.pos = (x + TILE_SIZE[0], y)
             case _:
                 raise ValueError(f"Invalid direction: '{self._direction}'.")
+        # check if outside the screen
+        self._handle_outside_bounds()
         # move next snake segment
         if self.prev_segment is not None:
             self.prev_segment.move()
             self.prev_segment.pos = x, y
+            self.prev_segment.direction = self.direction  # turn the previous segment to face this segment
+
+    def _handle_outside_bounds(self) -> None:
+        """Check if the snake sprite is outside the screen and move it to the opposite side if it is."""
+        x, y = self.pos
+        new_x, new_y = x, y
+        screen_w, screen_h = pg.display.get_surface().get_size()
+        tile_w, tile_h = TILE_SIZE
+        if x - tile_w / 2 < 0:
+            new_x = screen_w - tile_w / 2
+        elif x > screen_w:
+            new_x = tile_w / 2
+        if y - tile_h / 2 < 0:
+            new_y = screen_h - tile_h / 2
+        elif y > screen_h:
+            new_y = tile_h / 2
+        self.pos = new_x, new_y
 
     @property
     def direction(self) -> str:
@@ -130,9 +148,8 @@ class SnakeSegment(BaseSprite):
             self.rotate(rotation_angle)
             self._direction = direction
 
-
     def rotate(self, degrees: int) -> None:
-        """Rotates the sprite a given degree. Positive degrees is clockwise, negative is counter-clockwise."""
+        """Rotates the sprite a given degree. Positive degrees is counter-clockwise, negative is clockwise."""
         self.image = pg.transform.rotate(self.image, degrees)
         self.rect = self.get_rect(self.pos, self._anchor)
 
@@ -145,12 +162,11 @@ class Head(SnakeSegment):
                  anchor: str = "center",
                  direction: str = "right",
                  prev_segment: SnakeSegment = None) -> None:
+        self.image = load_image(resource.get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
         super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
                          prev_segment=prev_segment)
-        self.image = load_image(get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
-        self.rect = self.image.get_rect()
 
 
 class Tail(SnakeSegment):
@@ -159,23 +175,12 @@ class Tail(SnakeSegment):
     def __init__(self,
                  pos: tuple[int, int],
                  anchor: str = "center",
-                 direction: str = "right",
-                 next_segment: SnakeSegment = None) -> None:
-        self.image = load_image(get_resource_path(r"..\assets\images\tail.png"), TILE_SIZE)
-        self.rect = self.image.get_rect()
+                 direction: str = "right") -> None:
+        self.image = load_image(resource.get_resource_path(r"..\assets\images\tail.png"), TILE_SIZE)
         super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
                          prev_segment=None)
-        self.next_segment = next_segment
-
-    def move(self) -> None:
-        """Move the tail sprite in the direction it is facing by one tile size,
-         and then rotate its direction to the next segments direction such that the next move follows it."""
-        if self.next_segment is None:
-            return
-        super().move()
-        self.direction = self.next_segment.direction
 
 
 class Body(SnakeSegment):
@@ -186,13 +191,12 @@ class Body(SnakeSegment):
                  anchor: str = "center",
                  direction: str = "right",
                  prev_segment: SnakeSegment = None) -> None:
+        self.image = pg.Surface(TILE_SIZE)
+        self.image.fill(SNAKE_COLOR)
         super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
                          prev_segment=prev_segment)
-        self.image = pg.Surface(TILE_SIZE)
-        self.image.fill(SNAKE_COLOR)
-        self.rect = self.image.get_rect()
 
     def rotate(self, degrees: any) -> None:
         """No rotation needed for the body as it is a colored square sprite."""
@@ -206,11 +210,10 @@ class Food(BaseSprite):
                  screen_size: tuple[int, int],
                  max_dist: int,
                  head_pos: tuple[int, int]) -> None:
-        pos = get_random_tile_pos(screen_size,
-                                  TILE_SIZE,
-                                  max_dist,
-                                  head_pos)
+        pos = tile.get_random_tile_pos((screen_size[0] - TILE_SIZE[0], screen_size[1] - TILE_SIZE[1]),
+                                       TILE_SIZE,
+                                       max_dist,
+                                       head_pos)
+        self.image = load_image(resource.get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
         super().__init__(size=FOOD_SIZE,
                          pos=pos)
-        self.image = load_image(get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
-        self.rect = self.image.get_rect()

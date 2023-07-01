@@ -1,11 +1,8 @@
 ### TODO: 
-- Fix bug where you can go back on yourself if you press fast enough.- Add the eating mechanic.
-- Fix bug where body parts spawn wrong seeminly random places with grow().
-- Add the collision mechanic.
-- Add death mechanic.
-- Add a game over screen.
+~~- Add death mechanic.~~
+- - Add a game over screen.
 - Add a restart button.
-- Add a pause button.
+- Add a pause button seperate from pressing 'escape'.
 - Add a score and highs core system.
 - - Add a rare golden food with more points.
 - Add sounds.
@@ -13,3 +10,4 @@
 - Implement config.ini file and parser.
 - (Add a main menu?)
 - (Add a difficulty system with fps and score multiplier?)
+- (Add option to enable/disable walls collisions?)

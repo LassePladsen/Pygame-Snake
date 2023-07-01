@@ -7,7 +7,7 @@ class Queue:
         # maps number of queued frames to a dict mapping objects to actions to be executed on that object:
         self.queue = {}
 
-    def add(self, no_frames: int, obj_actions: list[tuple[SnakeSegment, str]]) -> None:
+    def add(self, no_frames: int, obj_actions: list[tuple[object, str]]) -> None:
         """Queue actions to be executed after the given number of frames on given objects.
          Actions are string statements that will be executed."""
         if self.queue.get(no_frames) is None:
@@ -19,7 +19,7 @@ class Queue:
         if (obj_actions := self.queue.get(0)) is None:
             return
         for obj, action in obj_actions:
-            exec(action)
+            exec(f"obj.{action}")
         del self.queue[0]
 
     def update(self):
