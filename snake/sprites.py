@@ -21,11 +21,57 @@ class SpriteGroup(pg.sprite.Group):
         super().__init__()
 
     def move(self):
-        """Move all sprites in the group by one tile size in the direction the sprite is facing."""
+        """NOT CURRENTLY USED. Move all sprites in the group by one tile size in the direction the sprite is facing."""
         for sprite in self.sprites():
             if not isinstance(sprite, SnakeSegment):  # dont move the food
                 continue
             sprite.move()
+
+
+class GameOverScreen(pg.sprite.Sprite):
+    def __init__(self,
+                 current_score: int,
+                 high_score: int,
+                 size: tuple[int, int],
+                 anchor: str = "center",
+                 font_size: int = 70,
+                 font_color: str | tuple[int, int, int] = "red") -> None:
+        super().__init__()
+        self.current_score = current_score
+        self.high_score = high_score
+        self.size = size
+        self.pos = size
+
+        # Create text surface
+        fonts = [
+            pg.font.Font(resource.get_resource_path("../assets/fonts/ThaleahFat.ttf"), int(font_size*i))
+            for i in [1, 0.5, 0.5]  # scale font size for each line
+        ]
+        lines = ["Game Over!", f"Score: {current_score}, High Score: {high_score}", "Press ENTER/SPACE to restart"]
+        rendered_lines = [font.render(line, True, font_color) for font, line in zip(fonts, lines)]
+        width = max(rendered_line.get_width() for rendered_line in rendered_lines)
+        font_pad = fonts[0].get_height() // 5
+        height = sum(rendered_line.get_height() for rendered_line in rendered_lines) + 2*font_pad
+        self.image = pg.Surface((width, height), pg.SRCALPHA)
+        for i, rendered_line in enumerate(rendered_lines):
+            x = (width - rendered_line.get_width()) // 2
+            y = i * (rendered_line.get_height() + font_pad)
+            self.image.blit(rendered_line, (x, y))
+        self.rect = self.get_rect(self.pos, anchor)
+
+
+    def get_rect(self,
+                 pos: tuple[int, int],
+                 anchor: str = "center") -> pg.rect.Rect:
+        """Returns a sprite rect at a given position."""
+        anchor_positions = {
+            "topleft": self.image.get_rect(topleft=pos),
+            "topright": self.image.get_rect(topright=pos),
+            "bottomleft": self.image.get_rect(bottomleft=pos),
+            "bottomright": self.image.get_rect(bottomright=pos),
+            "center": self.image.get_rect(center=pos),
+        }
+        return anchor_positions.get(anchor, self.image.get_rect(center=pos))  # defaults to anchor center
 
 
 class BaseSprite(pg.sprite.Sprite):
@@ -37,7 +83,7 @@ class BaseSprite(pg.sprite.Sprite):
                  size: tuple[int, int],
                  pos: tuple[int, int],
                  anchor: str = "center") -> None:
-        pg.sprite.Sprite.__init__(self)
+        super().__init__()
         self._anchor = anchor
         self.image = pg.transform.scale(self.image, size)
         self.pos = tile.get_center_tile_pos(pos, TILE_SIZE)
@@ -105,7 +151,7 @@ class SnakeSegment(BaseSprite):
                 self.pos = (x + TILE_SIZE[0], y)
             case _:
                 raise ValueError(f"Invalid direction: '{self._direction}'.")
-        # check if outside the screen
+        # check if outside the image
         self._handle_outside_bounds()
         # move next snake segment
         if self.prev_segment is not None:
@@ -114,7 +160,7 @@ class SnakeSegment(BaseSprite):
             self.prev_segment.direction = self.direction  # turn the previous segment to face this segment
 
     def _handle_outside_bounds(self) -> None:
-        """Check if the snake sprite is outside the screen and move it to the opposite side if it is."""
+        """Check if the snake sprite is outside the image and move it to the opposite side if it is."""
         x, y = self.pos
         new_x, new_y = x, y
         screen_w, screen_h = pg.display.get_surface().get_size()
