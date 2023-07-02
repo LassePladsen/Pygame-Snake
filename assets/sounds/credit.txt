@@ -1,0 +1,9 @@
+## Music
+Game loop "Abstraction - Three Red Hearts - Connected" by Abstraction (http://www.abstractionmusic.com) (bandcamp: http://abstractionmusic.bandcamp.com).
+
+
+## Sound effects
+All but one are created using 8/16 bit sound maker jsfxr on https://sfxr.me/.
+Death sound "Arcade Retro Game Over Sound Effect💤 sounds" (https://youtu.be/Zl69nO-izvs) by @youtubesoundeffect (https://www.youtube.com/@youtubesoundeffect)
+
+
