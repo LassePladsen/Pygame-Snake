@@ -1,5 +1,3 @@
-from sprites import SnakeSegment
-
 class Queue:
     """Class that represents actions that are queued for a number of following frames."""
 

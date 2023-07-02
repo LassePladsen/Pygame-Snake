@@ -28,37 +28,35 @@ class SpriteGroup(pg.sprite.Group):
             sprite.move()
 
 
-class GameOverScreen(pg.sprite.Sprite):
+class BaseTextOverlay(pg.sprite.Sprite):
+    """Base class for text overlays for inheritance."""
     def __init__(self,
-                 current_score: int,
-                 high_score: int,
+                 text_lines: list[str],
+                 font_sizes: list[int],
                  size: tuple[int, int],
                  anchor: str = "center",
-                 font_size: int = 70,
                  font_color: str | tuple[int, int, int] = "red") -> None:
         super().__init__()
-        self.current_score = current_score
-        self.high_score = high_score
         self.size = size
         self.pos = size
+        self.text_lines = text_lines
+        self.font_sizes = font_sizes
 
         # Create text surface
         fonts = [
-            pg.font.Font(resource.get_resource_path("../assets/fonts/ThaleahFat.ttf"), int(font_size*i))
-            for i in [1, 0.5, 0.5]  # scale font size for each line
+            pg.font.Font(resource.get_resource_path("../assets/fonts/ThaleahFat.ttf"), size)
+            for size in font_sizes
         ]
-        lines = ["Game Over!", f"Score: {current_score}, High Score: {high_score}", "Press ENTER/SPACE to restart"]
-        rendered_lines = [font.render(line, True, font_color) for font, line in zip(fonts, lines)]
+        rendered_lines = [font.render(line, True, font_color) for font, line in zip(fonts, text_lines)]
         width = max(rendered_line.get_width() for rendered_line in rendered_lines)
         font_pad = fonts[0].get_height() // 5
-        height = sum(rendered_line.get_height() for rendered_line in rendered_lines) + 2*font_pad
+        height = sum(rendered_line.get_height() for rendered_line in rendered_lines) + 2 * font_pad
         self.image = pg.Surface((width, height), pg.SRCALPHA)
         for i, rendered_line in enumerate(rendered_lines):
             x = (width - rendered_line.get_width()) // 2
             y = i * (rendered_line.get_height() + font_pad)
             self.image.blit(rendered_line, (x, y))
         self.rect = self.get_rect(self.pos, anchor)
-
 
     def get_rect(self,
                  pos: tuple[int, int],
@@ -72,6 +70,56 @@ class GameOverScreen(pg.sprite.Sprite):
             "center": self.image.get_rect(center=pos),
         }
         return anchor_positions.get(anchor, self.image.get_rect(center=pos))  # defaults to anchor center
+
+
+class GameOverScreen(BaseTextOverlay):
+    """Game over screen class."""
+    def __init__(self,
+                 current_score: int,
+                 high_score: int,
+                 size: tuple[int, int],
+                 anchor: str = "center",
+                 font_size: int = 70,
+                 font_color: str | tuple[int, int, int] = "red") -> None:
+        self.current_score = current_score
+        self.high_score = high_score if high_score else "N/A"
+        super().__init__(
+                text_lines=["Game Over!", f"Score: {self.current_score}, High Score: {self.high_score}",
+                            "Press ENTER/SPACE to restart"],
+                font_sizes=[font_size, font_size // 2, font_size // 2],
+                size=size,
+                anchor=anchor,
+                font_color=font_color
+        )
+
+
+class PauseScreen(BaseTextOverlay):
+    """Pause screen class."""
+    def __init__(self,
+                 size: tuple[int, int],
+                 anchor: str = "center",
+                 font_size: int = 70,
+                 font_color: str | tuple[int, int, int] = "red") -> None:
+        super().__init__(
+                text_lines=["PAUSED", "Press any key to resume..."],
+                font_sizes=[font_size, font_size // 2],
+                size=size,
+                anchor=anchor,
+                font_color=font_color
+        )
+
+def get_rect(self,
+             pos: tuple[int, int],
+             anchor: str = "center") -> pg.rect.Rect:
+    """Returns a sprite rect at a given position."""
+    anchor_positions = {
+        "topleft": self.image.get_rect(topleft=pos),
+        "topright": self.image.get_rect(topright=pos),
+        "bottomleft": self.image.get_rect(bottomleft=pos),
+        "bottomright": self.image.get_rect(bottomright=pos),
+        "center": self.image.get_rect(center=pos),
+    }
+    return anchor_positions.get(anchor, self.image.get_rect(center=pos))  # defaults to anchor center
 
 
 class BaseSprite(pg.sprite.Sprite):

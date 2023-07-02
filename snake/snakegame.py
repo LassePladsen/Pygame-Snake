@@ -4,7 +4,7 @@ import sys
 import pygame as pg
 
 import sprites
-from queue_ import Queue
+from queue_handler import Queue
 from tools import resource, sound
 
 logging.basicConfig(level=logging.INFO)
@@ -67,6 +67,8 @@ class SnakeGame:
 
         self._tail, self._head, self._food = None, None, None
         self._initialize_sprites()
+
+        self._pause_screen = None
 
     def _initialize_sprites(self):
         x, y = self.screen_size[0] // 2 - sprites.TILE_SIZE[0], self.screen_size[1] // 2
@@ -155,10 +157,16 @@ class SnakeGame:
     def pause(self) -> None:
         """Pauses the game."""
         self._pause = True
+        if not self._game_over:
+            logging.info("Pausing game.")
+            self._show_pause_screen()
 
     def unpause(self) -> None:
         """ Unpauses the game."""
+        logging.info("unpausing game.")
         self._pause = False
+        self._sprite_group.remove(self._pause_screen)
+
 
     def game_over(self) -> None:
         """Ends the game."""
@@ -178,12 +186,17 @@ class SnakeGame:
                 self._high_score,
                 (self.screen_size[0] // 2, self.screen_size[1] // 2)
         ))
-        # todo
-        pass
+
+    def _show_pause_screen(self) -> None:
+        """Creates the pause image."""
+        self._pause_screen = sprites.PauseScreen((self.screen_size[0] // 2, self.screen_size[1] // 2))
+        # noinspection PyTypeChecker
+        self._sprite_group.add(self._pause_screen)
 
     def restart(self) -> None:
         """Restarts the game and resets all values except high score."""
         self._game_over = False
+        self._pause = False
         self._background_music.play(-1)
         # noinspection PyTypeChecker
         self._initialize_sprites()
@@ -206,12 +219,12 @@ class SnakeGame:
     def _handle_key_press(self, key: int) -> None:
         """Handles key presses."""
         if key == pg.K_ESCAPE:  # _pause or resume the game
-            self._pause = not self._pause
-            # todo: add a _pause image/text overlay
+            self.unpause() if self._pause else self.pause()
         elif key in self.DIRECTION_KEYS:
             frames = 1 if self._key_pressed else 0
             self.queue.add(frames, [(self, f"turn('{self.DIRECTION_KEYS[key]}')")])
-            self.unpause()
+            if self._pause:
+                self.unpause()
             self._key_pressed = True
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
@@ -229,10 +242,12 @@ class SnakeGame:
             Head + Food -> Grow snake and spawn new food"""
         for i, segment in enumerate(self.snake_segments[1:]):  # check for collision with body or tail
             if self._head.rect.colliderect(segment.rect):
-                if i == 1:  # should not be possible to collide with the second segment
+                if i == 1:  # should not be possible to turn in towards the second segment
                     self._head.direction = segment.direction
                 else:
                     self.game_over()
+                    # remove that body part to stop the head from dissapearing
+                    self._sprite_group.remove(self.snake_segments[i+1])
                     return
         if self._head.rect.colliderect(self._food.rect):
             self.eat()
