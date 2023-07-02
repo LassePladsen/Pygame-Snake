@@ -162,7 +162,7 @@ class SnakeGame:
 
     def game_over(self) -> None:
         """Ends the game."""
-        logging.info(f"GAME OVER!")
+        logging.info(f"Game over! Score: {self._current_score}, High score: {self._high_score}")
         self._game_over = True
         self.pause()
         self._background_music.stop()
@@ -187,6 +187,7 @@ class SnakeGame:
         self._background_music.play(-1)
         # noinspection PyTypeChecker
         self._initialize_sprites()
+        logging.info("Game restarted.")
 
     def turn(self, direction: str) -> None:
         """Turns the snake's head in a given direction. Is used in self._handle_key_press()."""
