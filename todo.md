@@ -1,6 +1,8 @@
-### TODO: 
+### TODO:
+
 - Add a score and high score system/text.
-- - Add a rare golden food with more points.
+-
+    - Add a rare golden food with more points.
 - Add a restart button.
 - Add a pause button seperate from pressing 'escape'.
 - Add audio volume bar.

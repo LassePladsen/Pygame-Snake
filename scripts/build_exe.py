@@ -1,5 +1,6 @@
-import subprocess
 import os
+import subprocess
+
 
 def run_pyinstaller():
     """Builds the snake.exe relative_path using pyinstaller"""
@@ -26,6 +27,7 @@ def run_pyinstaller():
     ]
 
     subprocess.run(command, check=True)
+
 
 if __name__ == "__main__":
     run_pyinstaller()

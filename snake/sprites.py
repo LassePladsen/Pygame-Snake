@@ -30,6 +30,7 @@ class SpriteGroup(pg.sprite.Group):
 
 class BaseTextOverlay(pg.sprite.Sprite):
     """Base class for text overlays for inheritance."""
+
     def __init__(self,
                  text_lines: list[str],
                  font_sizes: list[int],
@@ -74,6 +75,7 @@ class BaseTextOverlay(pg.sprite.Sprite):
 
 class GameOverScreen(BaseTextOverlay):
     """Game over screen class."""
+
     def __init__(self,
                  current_score: int,
                  high_score: int,
@@ -95,6 +97,7 @@ class GameOverScreen(BaseTextOverlay):
 
 class PauseScreen(BaseTextOverlay):
     """Pause screen class."""
+
     def __init__(self,
                  size: tuple[int, int],
                  anchor: str = "center",
@@ -107,6 +110,7 @@ class PauseScreen(BaseTextOverlay):
                 anchor=anchor,
                 font_color=font_color
         )
+
 
 def get_rect(self,
              pos: tuple[int, int],

@@ -1,5 +1,7 @@
 import pygame as pg
+
 from tools import resource
+
 
 def get_sound(relative_path: str, volume) -> pg.mixer.Sound | None:
     """Returns a pygame sound file."""
@@ -16,4 +18,3 @@ def play_sound(relative_path: str, volume, loops=0) -> None:
     sound = get_sound(relative_path, volume)
     sound.set_volume(volume)
     sound.play(loops)
-

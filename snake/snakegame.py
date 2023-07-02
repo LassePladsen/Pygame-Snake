@@ -167,7 +167,6 @@ class SnakeGame:
         self._pause = False
         self._sprite_group.remove(self._pause_screen)
 
-
     def game_over(self) -> None:
         """Ends the game."""
         logging.info(f"Game over! Score: {self._current_score}, High score: {self._high_score}")
@@ -229,7 +228,6 @@ class SnakeGame:
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
 
-
     def _update_screen(self, screen: pg.surface.Surface, background: pg.surface.Surface) -> None:
         """Updates the image."""
         screen.blit(background, (0, 0))
@@ -247,7 +245,7 @@ class SnakeGame:
                 else:
                     self.game_over()
                     # remove that body part to stop the head from dissapearing
-                    self._sprite_group.remove(self.snake_segments[i+1])
+                    self._sprite_group.remove(self.snake_segments[i + 1])
                     return
         if self._head.rect.colliderect(self._food.rect):
             self.eat()

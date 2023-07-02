@@ -1,5 +1,6 @@
 from random import randint
 
+
 def get_random_tile_pos(screen_size: tuple[int, int],
                         tile_size: tuple[int, int],
                         max_dist: int,
@@ -21,14 +22,15 @@ def get_random_tile_pos(screen_size: tuple[int, int],
         food_y = screen_size[1]
     return food_x, food_y
 
+
 def get_center_tile_pos(pos: tuple[int, int], tile_size: tuple[int, int]) -> tuple[int, int]:
     """Returns the center position of the nearest tile with given size."""
     x, y = pos
     center_x, center_y = x, y  # default value
     width, height = tile_size
     # Calculate the nearest tile center
-    if (x+width/2) % width != 0:
+    if (x + width / 2) % width != 0:
         center_x = round(x / width) * width + width // 2
-    if (y+height/2) % height != 0:
+    if (y + height / 2) % height != 0:
         center_y = round(y / height) * height + height // 2
     return center_x, center_y
