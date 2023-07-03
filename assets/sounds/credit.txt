@@ -1,5 +1,5 @@
 ## Music
-Game loop "Abstraction - Three Red Hearts - Connected" by Abstraction (http://www.abstractionmusic.com) (bandcamp: http://abstractionmusic.bandcamp.com).
+Game loop music: "Abstraction - Three Red Hearts - Connected" by Abstraction (http://www.abstractionmusic.com) (bandcamp: http://abstractionmusic.bandcamp.com).
 
 
 ## Sound effects

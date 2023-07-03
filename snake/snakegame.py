@@ -5,7 +5,7 @@ import pygame as pg
 
 import sprites
 from queue_handler import Queue
-from tools import resource, sound
+from tools import get_resource_path, get_sound, play_sound
 
 logging.basicConfig(level=logging.INFO)
 
@@ -55,12 +55,12 @@ class SnakeGame:
         self._game_over = False
         self._key_pressed = False  # used to prevent multiple key presses per frame
         pg.display.set_caption(self.screen_title)
-        pg.display.set_icon(pg.image.load(resource.get_resource_path(r"..\assets\images\icon.png")))
+        pg.display.set_icon(pg.image.load(get_resource_path(r"..\assets\images\icon.png")))
 
         # sound volumes and background music
         self.sound_volume = 0.5
         self.music_volume = 0.15
-        self._background_music = sound.get_sound(
+        self._background_music = get_sound(
                 "Abstraction - Three Red Hearts - Connected.wav",
                 self.music_volume
         )
@@ -173,8 +173,8 @@ class SnakeGame:
         self._game_over = True
         self.pause()
         self._background_music.stop()
-        sound.play_sound("death.wav", self.sound_volume)
-        sound.play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sound_volume - 0.2)
+        play_sound("death.wav", self.sound_volume)
+        play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sound_volume - 0.2)
         self._show_game_over_screen()
 
     def _show_game_over_screen(self) -> None:
@@ -261,13 +261,13 @@ class SnakeGame:
                                       max_dist=self._max_food_dist,
                                       head_pos=self._head.pos)
         self._add_sprites([self._food])
-        sound.play_sound("eat.wav", self.sound_volume)
+        play_sound("eat.wav", self.sound_volume)
 
     def run(self) -> None:
         """Runs the game loop"""
         screen = pg.display.set_mode(self.screen_size)
         clock = pg.time.Clock()
-        background = pg.image.load(resource.get_resource_path(r"..\assets\images\background.png"))
+        background = pg.image.load(get_resource_path(r"..\assets\images\background.png"))
         self._background_music.play(-1)
         while True:
             clock.tick(self.fps)

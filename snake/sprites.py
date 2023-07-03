@@ -1,6 +1,6 @@
 import pygame as pg
 
-from tools import tile, resource
+from tools import get_resource_path, get_center_tile_pos, get_random_tile_pos
 
 # Constants:
 TILE_SIZE = 32, 32
@@ -45,7 +45,7 @@ class BaseTextOverlay(pg.sprite.Sprite):
 
         # Create text surface
         fonts = [
-            pg.font.Font(resource.get_resource_path("../assets/fonts/ThaleahFat.ttf"), size)
+            pg.font.Font(get_resource_path("../assets/fonts/ThaleahFat.ttf"), size)
             for size in font_sizes
         ]
         rendered_lines = [font.render(line, True, font_color) for font, line in zip(fonts, text_lines)]
@@ -138,7 +138,7 @@ class BaseSprite(pg.sprite.Sprite):
         super().__init__()
         self._anchor = anchor
         self.image = pg.transform.scale(self.image, size)
-        self.pos = tile.get_center_tile_pos(pos, TILE_SIZE)
+        self.pos = get_center_tile_pos(pos, TILE_SIZE)
         # self.rect gets set in the pos setter
 
     @property
@@ -260,7 +260,7 @@ class Head(SnakeSegment):
                  anchor: str = "center",
                  direction: str = "right",
                  prev_segment: SnakeSegment = None) -> None:
-        self.image = load_image(resource.get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
+        self.image = load_image(get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
         super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
@@ -274,7 +274,7 @@ class Tail(SnakeSegment):
                  pos: tuple[int, int],
                  anchor: str = "center",
                  direction: str = "right") -> None:
-        self.image = load_image(resource.get_resource_path(r"..\assets\images\tail.png"), TILE_SIZE)
+        self.image = load_image(get_resource_path(r"..\assets\images\tail.png"), TILE_SIZE)
         super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
@@ -308,10 +308,10 @@ class Food(BaseSprite):
                  screen_size: tuple[int, int],
                  max_dist: int,
                  head_pos: tuple[int, int]) -> None:
-        pos = tile.get_random_tile_pos((screen_size[0] - TILE_SIZE[0], screen_size[1] - TILE_SIZE[1]),
+        pos = get_random_tile_pos((screen_size[0] - TILE_SIZE[0], screen_size[1] - TILE_SIZE[1]),
                                        TILE_SIZE,
                                        max_dist,
                                        head_pos)
-        self.image = load_image(resource.get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
+        self.image = load_image(get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
         super().__init__(size=FOOD_SIZE,
                          pos=pos)
