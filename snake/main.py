@@ -5,6 +5,7 @@ def main() -> None:
     game = SnakeGame(screen_size=(640, 480),
                      title="Snake",
                      fps=11)
+    game.grow(5)
     game.run()
 
 

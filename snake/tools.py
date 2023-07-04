@@ -35,26 +35,17 @@ def play_sound(relative_path: str, volume, loops=0) -> None:
     sound.play(loops)
 
 
-def get_random_tile_pos(screen_size: tuple[int, int],
+def get_random_tile_pos(screen_size: tuple[tuple[int, int], tuple[int, int]],
                         tile_size: tuple[int, int],
                         max_dist: int,
-                        head_pos: tuple[int, int]) -> tuple[int, int]:
+                        reference_pos: tuple[int, int]) -> tuple[int, int]:
     """Returns a random position within the given distance from the snake head."""
-    x, y = head_pos
-    food_x, food_y = x, y
-    while abs(food_x - x) < max_dist * tile_size[0] and abs(food_y - y) < max_dist * tile_size[1]:
-        food_x = randint(0, screen_size[0])
-        food_y = randint(0, screen_size[1])
-    # Check if outside the window
-    if food_x < 0:
-        food_x = 0
-    elif food_x > screen_size[0]:
-        food_x = screen_size[0]
-    if food_y < 0:
-        food_y = 0
-    elif food_y > screen_size[1]:
-        food_y = screen_size[1]
-    return food_x, food_y
+    ref_x, ref_y = reference_pos
+    x, y = ref_x, ref_y
+    while abs(x - ref_x) < max_dist * tile_size[0] and abs(y - ref_y) < max_dist * tile_size[1]:
+        x = randint(screen_size[0][0], screen_size[0][1])
+        y = randint(screen_size[1][0], screen_size[1][1])
+    return x, y
 
 
 def get_center_tile_pos(pos: tuple[int, int], tile_size: tuple[int, int]) -> tuple[int, int]:
@@ -68,3 +59,29 @@ def get_center_tile_pos(pos: tuple[int, int], tile_size: tuple[int, int]) -> tup
     if (y + height / 2) % height != 0:
         center_y = round(y / height) * height + height // 2
     return center_x, center_y
+
+def create_file(file_path: str, content: str) -> None:
+    """Creates a file with the given content."""
+    with open(file_path, "w") as f:
+        f.write(content)
+
+def initialize_env() -> None:
+    """Creates a .env file if it doesn't exist."""
+    if os.path.exists(".env"):
+        return
+    create_file(".env", "HIGH_SCORE=0")
+
+def update_env(key: str, value: str) -> None:
+    """Updates the value of a key in the .env file."""
+    if not os.path.exists(".env"):
+        initialize_env()
+    with open(".env", "r") as f:
+        lines = f.readlines()
+    for i, line in enumerate(lines):
+        if line.startswith(key):
+            lines[i] = f"{key}={value}\n"
+            break
+    if not lines:  # empty
+        lines.append(f"{key}={value}\n")
+    with open(".env", "w") as f:
+        f.writelines(lines)

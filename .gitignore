@@ -3,3 +3,4 @@ assets/images/fruit_sprites
 scripts/pyinstaller_work/
 snake/testing.py
 Snake.spec
+snake/.env
