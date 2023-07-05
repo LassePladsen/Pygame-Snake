@@ -1,0 +1,61 @@
+('E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+ 'Snake\\scripts\\build\\Snake\\Snake.pkg',
+ {'BINARY': True,
+  'DATA': True,
+  'EXECUTABLE': True,
+  'EXTENSION': True,
+  'PYMODULE': True,
+  'PYSOURCE': True,
+  'PYZ': False,
+  'SPLASH': True},
+ [('PYZ-00.pyz',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\scripts\\build\\Snake\\PYZ-00.pyz',
+   'PYZ'),
+  ('struct',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\scripts\\build\\Snake\\localpycs\\struct.pyc',
+   'PYMODULE'),
+  ('pyimod01_archive',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\scripts\\build\\Snake\\localpycs\\pyimod01_archive.pyc',
+   'PYMODULE'),
+  ('pyimod02_importers',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\scripts\\build\\Snake\\localpycs\\pyimod02_importers.pyc',
+   'PYMODULE'),
+  ('pyimod03_ctypes',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\scripts\\build\\Snake\\localpycs\\pyimod03_ctypes.pyc',
+   'PYMODULE'),
+  ('pyimod04_pywin32',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\scripts\\build\\Snake\\localpycs\\pyimod04_pywin32.pyc',
+   'PYMODULE'),
+  ('pyiboot01_bootstrap',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\PyInstaller\\loader\\pyiboot01_bootstrap.py',
+   'PYSOURCE'),
+  ('pyi_rth_inspect',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_inspect.py',
+   'PYSOURCE'),
+  ('pyi_rth_pkgres',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgres.py',
+   'PYSOURCE'),
+  ('pyi_rth_pkgutil',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
+   'PYSOURCE'),
+  ('main',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\snake\\main.py',
+   'PYSOURCE')],
+ True,
+ False,
+ False,
+ [],
+ None,
+ None,
+ None)

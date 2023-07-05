@@ -1,11 +1,13 @@
 import logging
 import sys
+import os
 
+from dotenv import load_dotenv
 import pygame as pg
 
 import sprites
 from queue_handler import Queue
-from tools import resource, sound
+from tools import get_resource_path, get_sound, play_sound, initialize_env, update_env
 
 logging.basicConfig(level=logging.INFO)
 
@@ -45,27 +47,40 @@ class SnakeGame:
         elif screen_size[0] < 290 or screen_size[1] < 290:
             raise ValueError("Minimum image size is 290x290")
         if any((screen_size[i] % sprites.TILE_SIZE[i]) != 0 for i in range(2)):
-            raise ValueError(f"Screen size must be a multiple of the tile size: '{sprites.TILE_SIZE}'.")
+            raise ValueError(f"Screen sizes must be a multiple of the tile size: '{sprites.TILE_SIZE}'.")
         self.screen_size = screen_size
         self.screen_title = title
         self.fps = fps
+
+        # Scores
         self._current_score = 0
-        self._high_score = 0  # todo get high score from a saved data file
+        if os.path.isfile(get_resource_path("../snake/.env")):
+            load_dotenv(get_resource_path("../snake/.env"))
+        else:
+            os.environ["HIGH_SCORE"] = "0"
+            initialize_env()
+        if (hs := os.getenv("HIGH_SCORE")) is None:
+            update_env("HIGH_SCORE", "0")
+            hs = 0
+        self._high_score = int(hs)
+
+        # Game states
         self._pause = True  # game starts paused until user presses a button
         self._game_over = False
         self._key_pressed = False  # used to prevent multiple key presses per frame
         pg.display.set_caption(self.screen_title)
-        pg.display.set_icon(pg.image.load(resource.get_resource_path(r"..\assets\images\icon.png")))
+        pg.display.set_icon(pg.image.load(get_resource_path(r"..\assets\images\icon.png")))
 
-        # sound volumes and background music
+        # Sound volumes and background music
         self.sound_volume = 0.5
         self.music_volume = 0.15
-        self._background_music = sound.get_sound(
-                "Abstraction - Three Red Hearts - Connected.wav",
+        self.music_title = "Abstraction - Three Red Hearts - Connected.wav"
+        self._background_music = get_sound(
+                self.music_title,
                 self.music_volume
         )
 
-        self._tail, self._head, self._food = None, None, None
+        self._tail, self._head, self._food, self._top_bar = None, None, None, None
         self._initialize_sprites()
 
         self._pause_screen = None
@@ -74,6 +89,11 @@ class SnakeGame:
         x, y = self.screen_size[0] // 2 - sprites.TILE_SIZE[0], self.screen_size[1] // 2
         self._tail = sprites.Tail((x - sprites.TILE_SIZE[0], y))
         self._head = sprites.Head((x, y), prev_segment=self._tail)
+        self._top_bar = sprites.TopBar(
+                current_score=self._current_score,
+                high_score=self._high_score,
+                size=(self.screen_size[0], sprites.TILE_SIZE[1]),
+        )
         self.snake_segments = []
 
         # Create food sprite at random position no closer than 5 tiles from the snake's head.
@@ -83,7 +103,9 @@ class SnakeGame:
                 max_dist=self._max_food_dist,
                 head_pos=self._head.pos)
         self._sprite_group = sprites.SpriteGroup()
-        self._add_sprites([self._head, self._tail, self._food])  # add to sprite group and snake_segment list
+
+        # add to sprite group and snake_segment list
+        self._add_sprites([self._head, self._tail, self._food, self._top_bar])
         self.queue = Queue()  # queue for storing moves and key presses
 
     @property
@@ -167,15 +189,15 @@ class SnakeGame:
         self._pause = False
         self._sprite_group.remove(self._pause_screen)
 
-
     def game_over(self) -> None:
         """Ends the game."""
         logging.info(f"Game over! Score: {self._current_score}, High score: {self._high_score}")
         self._game_over = True
         self.pause()
         self._background_music.stop()
-        sound.play_sound("death.wav", self.sound_volume)
-        sound.play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sound_volume - 0.2)
+        play_sound("death.wav", self.sound_volume)
+        play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sound_volume - 0.2)
+        update_env("HIGH_SCORE", str(self._high_score))
         self._show_game_over_screen()
 
     def _show_game_over_screen(self) -> None:
@@ -197,6 +219,7 @@ class SnakeGame:
         """Restarts the game and resets all values except high score."""
         self._game_over = False
         self._pause = False
+        self._current_score = 0
         self._background_music.play(-1)
         # noinspection PyTypeChecker
         self._initialize_sprites()
@@ -229,17 +252,16 @@ class SnakeGame:
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
 
-
     def _update_screen(self, screen: pg.surface.Surface, background: pg.surface.Surface) -> None:
-        """Updates the image."""
-        screen.blit(background, (0, 0))
+        """Updates the screen surface."""
+        screen.blit(background, (0, sprites.TILE_SIZE[1]))
         self._sprite_group.draw(screen)
         pg.display.update()
 
     def handle_collision(self) -> None:
         """Checks any collisions between all the sprites and handle the collision logic.
             Head + (Body or tail)-> Game Over
-            Head + Food -> Grow snake and spawn new food"""
+            Head + Food -> Grow snake and replace with new food at random position."""
         for i, segment in enumerate(self.snake_segments[1:]):  # check for collision with body or tail
             if self._head.rect.colliderect(segment.rect):
                 if i == 1:  # should not be possible to turn in towards the second segment
@@ -247,15 +269,24 @@ class SnakeGame:
                 else:
                     self.game_over()
                     # remove that body part to stop the head from dissapearing
-                    self._sprite_group.remove(self.snake_segments[i+1])
+                    self._sprite_group.remove(self.snake_segments[i + 1])
                     return
         if self._head.rect.colliderect(self._food.rect):
             self.eat()
 
+    def update_scores(self, amount: int = 1) -> None:
+        """Updates the current score, and the high score if the current is higher."""
+        self._current_score += amount
+        self._top_bar.current_score = self._current_score
+        if self._current_score > self._high_score:
+            self._high_score = self._current_score
+            self._top_bar.high_score = self._high_score
+        self._top_bar.update_rect()
+
     def eat(self) -> None:
         """Grows the snake by one body part and replaces the food with a new one."""
         self.grow()
-        self._current_score += 1
+        self.update_scores()
         # noinspection PyTypeChecker
         self._sprite_group.remove(self._food)
         while self._food.pos in [sprite.pos for sprite in self._sprite_group]:  # make sure the food is not on the snake
@@ -263,13 +294,13 @@ class SnakeGame:
                                       max_dist=self._max_food_dist,
                                       head_pos=self._head.pos)
         self._add_sprites([self._food])
-        sound.play_sound("eat.wav", self.sound_volume)
+        play_sound("eat.wav", self.sound_volume)
 
     def run(self) -> None:
         """Runs the game loop"""
-        screen = pg.display.set_mode(self.screen_size)
+        screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1]+sprites.TILE_SIZE[1]))
         clock = pg.time.Clock()
-        background = pg.image.load(resource.get_resource_path(r"..\assets\images\background.png"))
+        background = pg.image.load(get_resource_path(r"..\assets\images\background.png"))
         self._background_music.play(-1)
         while True:
             clock.tick(self.fps)

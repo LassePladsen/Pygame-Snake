@@ -1,0 +1,2 @@
+@echo off
+pyinstaller --hidden-import tools --noconfirm --noconsole --icon "E:\Lasse\Dokumenter\Dev\Python prosjekter\Pygame Snake\assets\images\icon.ico" -n "Snake" --add-data "E:\Lasse\Dokumenter\Dev\Python prosjekter\Pygame Snake\assets;..\assets" --distpath "E:\Lasse\Dokumenter\Dev\Python prosjekter\Pygame Snake\dist\Snake" --workpath "E:\Lasse\Dokumenter\Dev\Python prosjekter\Pygame Snake\scripts\build" --specpath "E:\Lasse\Dokumenter\Dev\Python prosjekter\Pygame Snake\scripts\build" "E:\Lasse\Dokumenter\Dev\Python prosjekter\Pygame Snake\snake\main.py"

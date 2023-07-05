@@ -1,10 +1,11 @@
 import pygame as pg
 
-from tools import tile, resource
+from tools import get_resource_path, get_center_tile_pos, get_random_tile_pos
 
 # Constants:
 TILE_SIZE = 32, 32
 SNAKE_COLOR = 224, 164, 54
+BACKGROUND_COLOR = 5, 142, 32
 FOOD_SIZE = TILE_SIZE
 
 
@@ -30,33 +31,41 @@ class SpriteGroup(pg.sprite.Group):
 
 class BaseTextOverlay(pg.sprite.Sprite):
     """Base class for text overlays for inheritance."""
+
     def __init__(self,
                  text_lines: list[str],
                  font_sizes: list[int],
-                 size: tuple[int, int],
+                 pos: tuple[int, int],
                  anchor: str = "center",
-                 font_color: str | tuple[int, int, int] = "red") -> None:
+                 font_color: str | tuple[int, int, int] = "red",
+                 bg_color: str | tuple[int, int, int] = None,
+                 bg_size: tuple[int, int] = None) -> None:
         super().__init__()
-        self.size = size
-        self.pos = size
+        self.pos = pos
         self.text_lines = text_lines
         self.font_sizes = font_sizes
+        self._anchor = anchor
 
         # Create text surface
         fonts = [
-            pg.font.Font(resource.get_resource_path("../assets/fonts/ThaleahFat.ttf"), size)
+            pg.font.Font(get_resource_path("../assets/fonts/ThaleahFat.ttf"), size)
             for size in font_sizes
         ]
         rendered_lines = [font.render(line, True, font_color) for font, line in zip(fonts, text_lines)]
-        width = max(rendered_line.get_width() for rendered_line in rendered_lines)
-        font_pad = fonts[0].get_height() // 5
-        height = sum(rendered_line.get_height() for rendered_line in rendered_lines) + 2 * font_pad
+        line_pad = fonts[0].get_height() // 5  # padding between lines as function of their sizes
+        if bg_size:
+            width, height = bg_size
+        else:
+            width = max(rendered_line.get_width() for rendered_line in rendered_lines)
+            height = sum(rendered_line.get_height() for rendered_line in rendered_lines) + 2 * line_pad
         self.image = pg.Surface((width, height), pg.SRCALPHA)
+        if bg_color:
+            self.image.fill(bg_color)
         for i, rendered_line in enumerate(rendered_lines):
             x = (width - rendered_line.get_width()) // 2
-            y = i * (rendered_line.get_height() + font_pad)
+            y = i * (rendered_line.get_height() + line_pad)
             self.image.blit(rendered_line, (x, y))
-        self.rect = self.get_rect(self.pos, anchor)
+        self.rect = self.get_rect(self.pos, self._anchor)
 
     def get_rect(self,
                  pos: tuple[int, int],
@@ -69,32 +78,62 @@ class BaseTextOverlay(pg.sprite.Sprite):
             "bottomright": self.image.get_rect(bottomright=pos),
             "center": self.image.get_rect(center=pos),
         }
-        return anchor_positions.get(anchor, self.image.get_rect(center=pos))  # defaults to anchor center
+        if (rect := anchor_positions.get(anchor)) is None:
+            raise ValueError(f"Invalid anchor position: '{anchor}'.\n"
+                             f" Valid positions are: {[i for i in anchor_positions.keys()]}")
+        return rect
+
+
+class TopBar(BaseTextOverlay):
+    """Bar at the top of the screen with score and high score text."""
+
+    def __init__(self,
+                 current_score: int,
+                 high_score: int,
+                 size: tuple[int, int]) -> None:
+        self.current_score = current_score
+        self.high_score = high_score if high_score else "N/A"  # if no high score, display N/A
+        super().__init__(
+                text_lines=[f"Score: {self.current_score}  High Score: {self.high_score}"],
+                font_sizes=[30],
+                pos=(0, 0),
+                anchor="topleft",
+                font_color="black",
+                bg_color=BACKGROUND_COLOR,
+                bg_size=size
+        )
+
+    def update_rect(self):
+        self.__init__(
+                current_score=self.current_score,
+                high_score=self.high_score,
+                size=self.rect.size
+        )
 
 
 class GameOverScreen(BaseTextOverlay):
     """Game over screen class."""
+
     def __init__(self,
                  current_score: int,
                  high_score: int,
                  size: tuple[int, int],
-                 anchor: str = "center",
-                 font_size: int = 70,
-                 font_color: str | tuple[int, int, int] = "red") -> None:
+                 font_size: int = 70) -> None:
         self.current_score = current_score
-        self.high_score = high_score if high_score else "N/A"
+        self.high_score = high_score if high_score else "N/A"  # if no high score, display N/A
         super().__init__(
                 text_lines=["Game Over!", f"Score: {self.current_score}, High Score: {self.high_score}",
                             "Press ENTER/SPACE to restart"],
                 font_sizes=[font_size, font_size // 2, font_size // 2],
-                size=size,
-                anchor=anchor,
-                font_color=font_color
+                pos=size,
+                anchor="center",
+                font_color="red"
         )
 
 
 class PauseScreen(BaseTextOverlay):
     """Pause screen class."""
+
     def __init__(self,
                  size: tuple[int, int],
                  anchor: str = "center",
@@ -103,10 +142,11 @@ class PauseScreen(BaseTextOverlay):
         super().__init__(
                 text_lines=["PAUSED", "Press any key to resume..."],
                 font_sizes=[font_size, font_size // 2],
-                size=size,
+                pos=size,
                 anchor=anchor,
                 font_color=font_color
         )
+
 
 def get_rect(self,
              pos: tuple[int, int],
@@ -134,7 +174,7 @@ class BaseSprite(pg.sprite.Sprite):
         super().__init__()
         self._anchor = anchor
         self.image = pg.transform.scale(self.image, size)
-        self.pos = tile.get_center_tile_pos(pos, TILE_SIZE)
+        self.pos = get_center_tile_pos(pos, TILE_SIZE)
         # self.rect gets set in the pos setter
 
     @property
@@ -213,14 +253,15 @@ class SnakeSegment(BaseSprite):
         new_x, new_y = x, y
         screen_w, screen_h = pg.display.get_surface().get_size()
         tile_w, tile_h = TILE_SIZE
-        if x - tile_w / 2 < 0:
+        min_x, min_y = 0, tile_h
+        if x - tile_w / 2 < min_x:
             new_x = screen_w - tile_w / 2
         elif x > screen_w:
-            new_x = tile_w / 2
-        if y - tile_h / 2 < 0:
+            new_x = min_x + tile_w / 2
+        if y - tile_h / 2 < min_y:
             new_y = screen_h - tile_h / 2
         elif y > screen_h:
-            new_y = tile_h / 2
+            new_y = min_y + tile_h / 2
         self.pos = new_x, new_y
 
     @property
@@ -256,7 +297,7 @@ class Head(SnakeSegment):
                  anchor: str = "center",
                  direction: str = "right",
                  prev_segment: SnakeSegment = None) -> None:
-        self.image = load_image(resource.get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
+        self.image = load_image(get_resource_path(r"..\assets\images\head.png"), TILE_SIZE)
         super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
@@ -270,7 +311,7 @@ class Tail(SnakeSegment):
                  pos: tuple[int, int],
                  anchor: str = "center",
                  direction: str = "right") -> None:
-        self.image = load_image(resource.get_resource_path(r"..\assets\images\tail.png"), TILE_SIZE)
+        self.image = load_image(get_resource_path(r"..\assets\images\tail.png"), TILE_SIZE)
         super().__init__(pos=pos,
                          anchor=anchor,
                          direction=direction,
@@ -304,10 +345,12 @@ class Food(BaseSprite):
                  screen_size: tuple[int, int],
                  max_dist: int,
                  head_pos: tuple[int, int]) -> None:
-        pos = tile.get_random_tile_pos((screen_size[0] - TILE_SIZE[0], screen_size[1] - TILE_SIZE[1]),
-                                       TILE_SIZE,
-                                       max_dist,
-                                       head_pos)
-        self.image = load_image(resource.get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
+        pos = get_random_tile_pos(
+                screen_size=((0, screen_size[0] - TILE_SIZE[0]), (TILE_SIZE[1], screen_size[1] - TILE_SIZE[1])),
+                tile_size=TILE_SIZE,
+                max_dist=max_dist,
+                reference_pos=head_pos
+        )
+        self.image = load_image(get_resource_path(r"..\assets\images\food.png"), TILE_SIZE)
         super().__init__(size=FOOD_SIZE,
                          pos=pos)
