@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import pygame as pg
 
 import sprites
+import textoverlays
+import menus
 from queue_handler import Queue
 from tools import get_resource_path, get_sound, play_sound, initialize_env, update_env
 
@@ -89,7 +91,7 @@ class SnakeGame:
         x, y = self.screen_size[0] // 2 - sprites.TILE_SIZE[0], self.screen_size[1] // 2
         self._tail = sprites.Tail((x - sprites.TILE_SIZE[0], y))
         self._head = sprites.Head((x, y), prev_segment=self._tail)
-        self._top_bar = sprites.TopBar(
+        self._top_bar = menus.TopBarMenu(
                 current_score=self._current_score,
                 high_score=self._high_score,
                 size=(self.screen_size[0], sprites.TILE_SIZE[1]),
@@ -203,7 +205,7 @@ class SnakeGame:
     def _show_game_over_screen(self) -> None:
         """Creates the game over image."""
         # noinspection PyTypeChecker
-        self._sprite_group.add(sprites.GameOverScreen(
+        self._sprite_group.add(textoverlays.GameOverOverlay(
                 self._current_score,
                 self._high_score,
                 (self.screen_size[0] // 2, self.screen_size[1] // 2)
@@ -211,7 +213,7 @@ class SnakeGame:
 
     def _show_pause_screen(self) -> None:
         """Creates the pause image."""
-        self._pause_screen = sprites.PauseScreen((self.screen_size[0] // 2, self.screen_size[1] // 2))
+        self._pause_screen = textoverlays.PauseOverlay((self.screen_size[0] // 2, self.screen_size[1] // 2))
         # noinspection PyTypeChecker
         self._sprite_group.add(self._pause_screen)
 
@@ -251,6 +253,9 @@ class SnakeGame:
             self._key_pressed = True
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
+        else:  # unpause for any other key too
+            if self._pause:
+                self.unpause()
 
     def _update_screen(self, screen: pg.surface.Surface, background: pg.surface.Surface) -> None:
         """Updates the screen surface."""

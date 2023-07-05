@@ -10,6 +10,8 @@
     - fps+screen size config
     - difficulty profiles
     - current saved settings (difficulty, audio+music volume)
+  
+- Fix bug where if the snake is long enough, its tail rotates a frame too late when turning.
 - (Add a main menu?)
 - (Round the snake square corners where a turn is happening?)
 - (Add a difficulty system with fps and score multiplier?)
