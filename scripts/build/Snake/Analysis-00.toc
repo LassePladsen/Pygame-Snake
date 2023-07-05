@@ -1887,12 +1887,6 @@
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\pygame\\version.py',
    'PYMODULE'),
-  ('tracemalloc',
-   'E:\\Programmer\\Python\\Python311\\Lib\\tracemalloc.py',
-   'PYMODULE'),
-  ('stringprep',
-   'E:\\Programmer\\Python\\Python311\\Lib\\stringprep.py',
-   'PYMODULE'),
   ('_py_abc', 'E:\\Programmer\\Python\\Python311\\Lib\\_py_abc.py', 'PYMODULE'),
   ('getpass', 'E:\\Programmer\\Python\\Python311\\Lib\\getpass.py', 'PYMODULE'),
   ('nturl2path',
@@ -1902,6 +1896,12 @@
   ('netrc', 'E:\\Programmer\\Python\\Python311\\Lib\\netrc.py', 'PYMODULE'),
   ('http.cookiejar',
    'E:\\Programmer\\Python\\Python311\\Lib\\http\\cookiejar.py',
+   'PYMODULE'),
+  ('stringprep',
+   'E:\\Programmer\\Python\\Python311\\Lib\\stringprep.py',
+   'PYMODULE'),
+  ('tracemalloc',
+   'E:\\Programmer\\Python\\Python311\\Lib\\tracemalloc.py',
    'PYMODULE'),
   ('snakegame',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
@@ -1935,11 +1935,19 @@
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\dotenv\\parser.py',
    'PYMODULE')],
- [('python311.dll',
+ [('VCRUNTIME140.dll',
+   'E:\\Programmer\\Python\\Python311\\VCRUNTIME140.dll',
+   'BINARY'),
+  ('python311.dll',
    'E:\\Programmer\\Python\\Python311\\python311.dll',
    'BINARY'),
-  ('VCRUNTIME140.dll',
-   'E:\\Programmer\\Python\\Python311\\VCRUNTIME140.dll',
+  ('libjpeg-9.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\libjpeg-9.dll',
+   'BINARY'),
+  ('libwebp-7.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\libwebp-7.dll',
    'BINARY'),
   ('SDL2_mixer.dll',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
@@ -1949,57 +1957,49 @@
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\pygame\\libopus-0.dll',
    'BINARY'),
-  ('SDL2.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\SDL2.dll',
-   'BINARY'),
-  ('libjpeg-9.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\libjpeg-9.dll',
-   'BINARY'),
-  ('freetype.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\freetype.dll',
-   'BINARY'),
-  ('libopusfile-0.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\libopusfile-0.dll',
-   'BINARY'),
-  ('portmidi.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\portmidi.dll',
-   'BINARY'),
-  ('libogg-0.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\libogg-0.dll',
-   'BINARY'),
-  ('libwebp-7.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\libwebp-7.dll',
-   'BINARY'),
-  ('SDL2_image.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\SDL2_image.dll',
-   'BINARY'),
   ('libpng16-16.dll',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\pygame\\libpng16-16.dll',
-   'BINARY'),
-  ('libmodplug-1.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\libmodplug-1.dll',
-   'BINARY'),
-  ('zlib1.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\zlib1.dll',
    'BINARY'),
   ('libtiff-5.dll',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\pygame\\libtiff-5.dll',
    'BINARY'),
+  ('SDL2_image.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\SDL2_image.dll',
+   'BINARY'),
+  ('libogg-0.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\libogg-0.dll',
+   'BINARY'),
+  ('libopusfile-0.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\libopusfile-0.dll',
+   'BINARY'),
+  ('zlib1.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\zlib1.dll',
+   'BINARY'),
+  ('libmodplug-1.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\libmodplug-1.dll',
+   'BINARY'),
+  ('portmidi.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\portmidi.dll',
+   'BINARY'),
+  ('freetype.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\freetype.dll',
+   'BINARY'),
   ('SDL2_ttf.dll',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\pygame\\SDL2_ttf.dll',
+   'BINARY'),
+  ('SDL2.dll',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\SDL2.dll',
    'BINARY'),
   ('_decimal.pyd',
    'E:\\Programmer\\Python\\Python311\\DLLs\\_decimal.pyd',
@@ -2161,10 +2161,6 @@
   ('pygame\\SDL2.dll',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\pygame\\SDL2.dll',
-   'BINARY'),
-  ('pygame\\libogg-0.dll',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\libogg-0.dll',
    'BINARY'),
   ('pygame\\zlib1.dll',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
@@ -3189,12 +3185,12 @@
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\scripts\\build\\Snake\\base_library.zip',
    'DATA'),
-  ('pygame\\pygame_icon.bmp',
-   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
-   'Snake\\venv\\Lib\\site-packages\\pygame\\pygame_icon.bmp',
-   'DATA'),
   ('pygame\\freesansbold.ttf',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\pygame\\freesansbold.ttf',
+   'DATA'),
+  ('pygame\\pygame_icon.bmp',
+   'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
+   'Snake\\venv\\Lib\\site-packages\\pygame\\pygame_icon.bmp',
    'DATA')],
  [])

@@ -64,7 +64,7 @@
  [],
  False,
  False,
- 1688510360,
+ 1688579240,
  [('runw.exe',
    'E:\\Lasse\\Dokumenter\\Dev\\Python prosjekter\\Pygame '
    'Snake\\venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
