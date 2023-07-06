@@ -82,7 +82,8 @@ class SnakeGame:
                 self.music_volume
         )
 
-        self._tail, self._head, self._food, self._top_bar = None, None, None, None
+        # Initialize sprites
+        self._tail, self._head, self._food, self._top_menu = None, None, None, None
         self._initialize_sprites()
 
         self._pause_screen = None
@@ -91,10 +92,15 @@ class SnakeGame:
         x, y = self.screen_size[0] // 2 - sprites.TILE_SIZE[0], self.screen_size[1] // 2
         self._tail = sprites.Tail((x - sprites.TILE_SIZE[0], y))
         self._head = sprites.Head((x, y), prev_segment=self._tail)
-        self._top_bar = menus.TopBarMenu(
+        self._top_menu = menus.TopBarMenu(
                 current_score=self._current_score,
                 high_score=self._high_score,
                 size=(self.screen_size[0], sprites.TILE_SIZE[1]),
+        )
+        size = (self.screen_size[0] // 2, self.screen_size[1] // 2)
+        self._settings_menu = menus.SettingsMenu(
+                pos=size,   # positioned middle of the screen
+                size=size,  # size half the screen
         )
         self.snake_segments = []
 
@@ -107,7 +113,7 @@ class SnakeGame:
         self._sprite_group = sprites.SpriteGroup()
 
         # add to sprite group and snake_segment list
-        self._add_sprites([self._head, self._tail, self._food, self._top_bar])
+        self._add_sprites([self._head, self._tail, self._food, self._top_menu, self._settings_menu])
         self.queue = Queue()  # queue for storing moves and key presses
 
     @property
@@ -282,11 +288,11 @@ class SnakeGame:
     def update_scores(self, amount: int = 1) -> None:
         """Updates the current score, and the high score if the current is higher."""
         self._current_score += amount
-        self._top_bar.current_score = self._current_score
+        self._top_menu.current_score = self._current_score
         if self._current_score > self._high_score:
             self._high_score = self._current_score
-            self._top_bar.high_score = self._high_score
-        self._top_bar.update_rect()
+            self._top_menu.high_score = self._high_score
+        self._top_menu.update_rect()
 
     def eat(self) -> None:
         """Grows the snake by one body part and replaces the food with a new one."""

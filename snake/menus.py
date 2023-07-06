@@ -1,10 +1,6 @@
-import pygame as pg
-
-from textoverlays import BaseTextOverlay, FONT_PATH
+from textoverlays import BaseTextOverlay
 
 BACKGROUND_COLOR = 5, 142, 32
-
-# TODO: settings menu
 
 
 class TopBarMenu(BaseTextOverlay):
@@ -34,15 +30,29 @@ class TopBarMenu(BaseTextOverlay):
                 size=self.rect.size
         )
 
+
 class SettingsMenu(BaseTextOverlay):
     """Menu for changing settings."""
 
     def __init__(self,
+                 pos: tuple[int, int],
                  size: tuple[int, int],
-                 anchor: str = "center",
                  title_font_size: int = 70,
-                 settings_font_size: int = 50,
+                 settings_font_size: int = 20,
                  font_color: str | tuple[int, int, int] = "black",
                  bg_color: str | tuple[int, int, int] = "gray") -> None:
-        pass
+        lines = [" SETTINGS", "Difficulty:", "Master volume:", "Sound fx volume:", "Music volume:"]
+        length = len(lines) - 1
+        super().__init__(
+                text_lines=lines,
+                font_sizes=[title_font_size] + [settings_font_size] * length,
+                font_color=font_color,
+                pos=pos,
+                bg_color=bg_color,
+                bg_size=size,
+                line_centering=False,
+                line_padding=[25]*length,
+                border_color="black",
+                border_size_pad=10
+        )
 
