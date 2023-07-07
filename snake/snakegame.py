@@ -8,6 +8,7 @@ import pygame as pg
 import sprites
 import textoverlays
 import menus
+import buttons
 from queue_handler import Queue
 from tools import get_resource_path, get_sound, play_sound, initialize_env, update_env
 
@@ -54,6 +55,10 @@ class SnakeGame:
         self.screen_title = title
         self.fps = fps
 
+        # Screen surfaces
+        self.screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1] + sprites.TILE_SIZE[1]))
+        self.background = pg.image.load(get_resource_path(r"..\assets\images\background.png"))
+
         # Scores
         self._current_score = 0
         if os.path.isfile(get_resource_path("../snake/.env")):
@@ -68,10 +73,9 @@ class SnakeGame:
 
         # Game states
         self._pause = True  # game starts paused until user presses a button
-        self._game_over = False
+        self._game_over = False  # whether the player is dead
         self._key_pressed = False  # used to prevent multiple key presses per frame
-        pg.display.set_caption(self.screen_title)
-        pg.display.set_icon(pg.image.load(get_resource_path(r"..\assets\images\icon.png")))
+        self._settings_showing = False  # whether the settings menu is showing
 
         # Sound volumes and background music
         self.sound_volume = 0.5
@@ -83,38 +87,62 @@ class SnakeGame:
         )
 
         # Initialize sprites
-        self._tail, self._head, self._food, self._top_menu = None, None, None, None
+        self._head = None
+        self._tail = None
+        self._pause_screen = None
+        self._food = None
         self._initialize_sprites()
 
-        self._pause_screen = None
+        # Screen caption and icon
+        pg.display.set_caption(self.screen_title)
+        pg.display.set_icon(pg.image.load(get_resource_path(r"..\assets\images\icon.png")))
 
     def _initialize_sprites(self):
+        """Initializes all game sprites and adds it to the sprite group. Also initializes a new Queue instance."""
+        # Snake head and tail:
         x, y = self.screen_size[0] // 2 - sprites.TILE_SIZE[0], self.screen_size[1] // 2
         self._tail = sprites.Tail((x - sprites.TILE_SIZE[0], y))
         self._head = sprites.Head((x, y), prev_segment=self._tail)
-        self._top_menu = menus.TopBarMenu(
+
+        # Top menu bar:
+        self._top_menu = menus.TopMenuBar(
                 current_score=self._current_score,
                 high_score=self._high_score,
                 size=(self.screen_size[0], sprites.TILE_SIZE[1]),
         )
-        size = (self.screen_size[0] // 2, self.screen_size[1] // 2)
-        self._settings_menu = menus.SettingsMenu(
-                pos=size,   # positioned middle of the screen
-                size=size,  # size half the screen
-        )
-        self.snake_segments = []
 
-        # Create food sprite at random position no closer than 5 tiles from the snake's head.
+        # Pause screen:
+        self._pause_screen = textoverlays.PauseOverlay((self.screen_size[0] // 2, self.screen_size[1] // 2))
+
+        # Settings button and menu:
+        self._settings_button = buttons.SettingsButton(
+                pos=(self.screen_size[0], 0),  # positioned top right corner of screen
+                size=(sprites.TILE_SIZE[0], sprites.TILE_SIZE[1]),
+                anchor="topright"
+        )
+        settings_menu_size = (self.screen_size[0] // 2, self.screen_size[1] // 2)  # size half the screen
+        self._settings_menu = menus.SettingsMenu(
+                pos=settings_menu_size,   # positioned middle of the screen
+                size=settings_menu_size,
+        )
+
+        # Create food sprite at random position no closer than 5 tiles from the snake's head:
         self._max_food_dist = 5
         self._food = sprites.Food(
                 screen_size=self.screen_size,
                 max_dist=self._max_food_dist,
                 head_pos=self._head.pos)
-        self._sprite_group = sprites.SpriteGroup()
 
-        # add to sprite group and snake_segment list
-        self._add_sprites([self._head, self._tail, self._food, self._top_menu, self._settings_menu])
-        self.queue = Queue()  # queue for storing moves and key presses
+        # Sprite groups
+        self._sprite_group = sprites.SpriteGroup()  # sprite group for all currently showing sprites
+        self.snake_segments = []  # list of all currently showing snake segment sprites
+        self.buttons = {}  # dict mapping currently showing button types to their corresponding showing button sprites
+
+        # Add starting sprites to sprite group and snake_segment list:
+        self._add_sprites([self._head, self._tail, self._food, self._top_menu, self._settings_button])
+
+        # Queue for storing moves and key presses:
+        self.queue = Queue()
 
     @property
     def snake_length(self) -> int:
@@ -122,11 +150,14 @@ class SnakeGame:
         return len(self.snake_segments)
 
     def _add_sprites(self, sprite_list: list[sprites.SnakeSegment | sprites.Food]) -> None:
-        """Add given sprites to the sprite group and list."""
+        """Add given sprites to the sprite group and corresponding list."""
         # noinspection PyTypeChecker
         self._sprite_group.add(sprite_list)
-        # dont add food to snake_segment list
-        self.snake_segments += [sprite for sprite in sprite_list if isinstance(sprite, sprites.SnakeSegment)]
+        for sprite in sprite_list:
+            if isinstance(sprite, sprites.SnakeSegment):
+                self.snake_segments.append(sprite)
+            elif isinstance(sprite, buttons.Button):
+                self.buttons[sprite.type] = sprite
 
     def grow(self, amount: int = 1) -> None:
         """Grows the snake by a given amount of body parts."""
@@ -189,7 +220,7 @@ class SnakeGame:
         self._pause = True
         if not self._game_over:
             logging.info("Pausing game.")
-            self._show_pause_screen()
+            self._sprite_group.add(self._pause_screen)  # show pause screen
 
     def unpause(self) -> None:
         """ Unpauses the game."""
@@ -206,7 +237,7 @@ class SnakeGame:
         play_sound("death.wav", self.sound_volume)
         play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sound_volume - 0.2)
         update_env("HIGH_SCORE", str(self._high_score))
-        self._show_game_over_screen()
+        self._show_game_over_screen()  # create game over screen with updated scores
 
     def _show_game_over_screen(self) -> None:
         """Creates the game over image."""
@@ -216,12 +247,6 @@ class SnakeGame:
                 self._high_score,
                 (self.screen_size[0] // 2, self.screen_size[1] // 2)
         ))
-
-    def _show_pause_screen(self) -> None:
-        """Creates the pause image."""
-        self._pause_screen = textoverlays.PauseOverlay((self.screen_size[0] // 2, self.screen_size[1] // 2))
-        # noinspection PyTypeChecker
-        self._sprite_group.add(self._pause_screen)
 
     def restart(self) -> None:
         """Restarts the game and resets all values except high score."""
@@ -239,13 +264,19 @@ class SnakeGame:
             return
         self._head.direction = direction
 
-    def _handle_events(self, events: list[pg.event.Event]) -> None:
+    def _handle_events(self) -> None:
+        """Handles all pygame events such as quitting, key presses, mouse hovering and clicks."""
+        events = pg.event.get()
+        mouse_pos = pg.mouse.get_pos()
         for event in events:
             match event.type:
                 case pg.QUIT:
                     quit_game()
                 case pg.KEYDOWN:
                     self._handle_key_press(event.key)
+                case pg.MOUSEBUTTONDOWN:
+                    self._handle_mouse_press(mouse_pos)
+        self._handle_mouse_hovering(mouse_pos)
 
     def _handle_key_press(self, key: int) -> None:
         """Handles key presses."""
@@ -259,14 +290,38 @@ class SnakeGame:
             self._key_pressed = True
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
-        else:  # unpause for any other key too
-            if self._pause:
-                self.unpause()
+        # unpause for any other key press too
+        elif self._pause:
+            self.unpause()
 
-    def _update_screen(self, screen: pg.surface.Surface, background: pg.surface.Surface) -> None:
+    def _handle_mouse_press(self, mouse_pos: tuple[int, int]) -> None:
+        """Handles mouse clicks."""
+        for button_type, button in self.buttons.items():
+            if button.is_hovered(mouse_pos):
+                match button_type:
+                    case "settings":
+                        self._pause = True
+                        self._settings_showing = True
+                        # noinspection PyTypeChecker
+                        self._sprite_group.add(self._settings_menu)
+                    case "_":
+                        raise NotImplementedError(f"Button type '{button_type}' is not yet implemented.")
+            elif button.was_hovered:  # was hovered last frame -> unhover the button this frame
+                button.unhover()
+
+
+    def _handle_mouse_hovering(self, mouse_pos: tuple[int, int]) -> None:
+        """Handles mouse hovering."""
+        for button_type, button in self.buttons.items():
+            if button.is_hovered(mouse_pos):
+                button.hover()
+            elif button.was_hovered:  # was hovered last frame -> unhover the button this frame
+                button.unhover()
+
+    def _update_screen(self) -> None:
         """Updates the screen surface."""
-        screen.blit(background, (0, sprites.TILE_SIZE[1]))
-        self._sprite_group.draw(screen)
+        self.screen.blit(self.background, (0, sprites.TILE_SIZE[1]))
+        self._sprite_group.draw(self.screen)
         pg.display.update()
 
     def handle_collision(self) -> None:
@@ -309,17 +364,15 @@ class SnakeGame:
 
     def run(self) -> None:
         """Runs the game loop"""
-        screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1]+sprites.TILE_SIZE[1]))
         clock = pg.time.Clock()
-        background = pg.image.load(get_resource_path(r"..\assets\images\background.png"))
         self._background_music.play(-1)
         while True:
             clock.tick(self.fps)
             self._key_pressed = False
-            self._handle_events(pg.event.get())
+            self._handle_events()
             if not self._pause and not self._game_over:
                 self.queue.handle()
                 self.queue.update()
                 self._head.move()
                 self.handle_collision()
-            self._update_screen(screen, background)
+            self._update_screen()

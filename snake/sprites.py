@@ -39,6 +39,7 @@ class BaseSprite(pg.sprite.Sprite):
                  anchor: str = "center") -> None:
         super().__init__()
         self._anchor = anchor
+
         self.image = pg.transform.scale(self.image, size)
         self.pos = get_center_tile_pos(pos, TILE_SIZE)
         # self.rect gets set in the pos setter
@@ -86,9 +87,7 @@ class SnakeSegment(BaseSprite):
                 self._direction = direction
             case _:
                 raise ValueError(f"Invalid direction: '{direction}'.")
-        super().__init__(size=TILE_SIZE,
-                         pos=pos,
-                         anchor=anchor)
+        super().__init__(size=TILE_SIZE, pos=pos, anchor=anchor)
         self.prev_segment = prev_segment
 
     def move(self) -> None:
