@@ -1,9 +1,9 @@
-from textoverlays import BaseTextOverlay
+from textoverlays import TextOverlay
 
 BACKGROUND_COLOR = 5, 142, 32
 
 
-class TopBarMenu(BaseTextOverlay):
+class TopMenuBar(TextOverlay):
     """Bar at the top of the screen with score and high score text."""
 
     def __init__(self,
@@ -31,7 +31,7 @@ class TopBarMenu(BaseTextOverlay):
         )
 
 
-class SettingsMenu(BaseTextOverlay):
+class SettingsMenu(TextOverlay):
     """Menu for changing settings."""
 
     def __init__(self,
