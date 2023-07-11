@@ -10,7 +10,7 @@ import sprites
 import textoverlays
 import menus
 from queue_handler import Queue
-from tools import get_resource_path, get_sound, play_sound, update_env, create_file, get_ini_value
+import tools
 
 logging.basicConfig(level=logging.INFO)
 
@@ -40,9 +40,9 @@ class SnakeGame:
         pg.K_SPACE: True
     }
 
-    CONFIG_PATH = get_resource_path(r"../config.ini")
+    CONFIG_PATH = tools.get_resource_path(r"../config.ini")
 
-    PROFILES_PATH = get_resource_path(r"../profiles.ini")
+    PROFILES_PATH = tools.get_resource_path(r"../profiles.ini")
 
     def __init__(self, title: str) -> None:
         pg.init()
@@ -66,12 +66,12 @@ class SnakeGame:
             with open(self.CONFIG_PATH, "w") as f:
                 config.write(f)
         else:
-            screen_size = get_ini_value(self.CONFIG_PATH, "SETTINGS", "screen_size").split(",")
+            screen_size = tools.get_ini_value(self.CONFIG_PATH, "SETTINGS", "screen_size").split(",")
             screen_size = int(screen_size[0]), int(screen_size[1])
-            difficulty = get_ini_value(self.CONFIG_PATH, "SETTINGS", "difficulty")
-            master_volume = int(get_ini_value(self.CONFIG_PATH, "SETTINGS", "master_volume"))
-            sfx_volume = int(get_ini_value(self.CONFIG_PATH, "SETTINGS", "sfx_volume"))
-            music_volume = int(get_ini_value(self.CONFIG_PATH, "SETTINGS", "music_volume"))
+            difficulty = tools.get_ini_value(self.CONFIG_PATH, "SETTINGS", "difficulty")
+            master_volume = int(tools.get_ini_value(self.CONFIG_PATH, "SETTINGS", "master_volume"))
+            sfx_volume = int(tools.get_ini_value(self.CONFIG_PATH, "SETTINGS", "sfx_volume"))
+            music_volume = int(tools.get_ini_value(self.CONFIG_PATH, "SETTINGS", "music_volume"))
 
         # Check valid screen values
         if screen_size[0] > 896 or screen_size[1] > 640:
@@ -98,7 +98,7 @@ class SnakeGame:
                              f"Volumes must be greater than 0.")
 
         # Check valid fps value
-        fps = get_ini_value(self.PROFILES_PATH, difficulty, "fps")
+        fps = tools.get_ini_value(self.PROFILES_PATH, difficulty, "fps")
         if not fps:
             match difficulty:
                 case "easy":
@@ -113,7 +113,7 @@ class SnakeGame:
             fps = int(fps)
 
         # Check valid growth score value
-        growth_score = get_ini_value(self.PROFILES_PATH, difficulty, "growth_score")
+        growth_score = tools.get_ini_value(self.PROFILES_PATH, difficulty, "growth_score")
         if not growth_score:
             match difficulty:
                 case "easy":
@@ -139,16 +139,16 @@ class SnakeGame:
         self.sfx_volume = self.master_volume*sfx_volume*0.5
         self.music_volume = self.master_volume*music_volume*0.15
         self.music_title = "Abstraction - Three Red Hearts - Connected.wav"
-        self._music = get_sound(self.music_title, self.music_volume)
+        self._music = tools.get_sound(self.music_title, self.music_volume)
 
         # Scores
         self._current_score = 0
-        if not os.path.exists(get_resource_path(r"../.env")):
-            create_file(r"..\.env", "HIGH_SCORE=0")  # create default .env file
-        load_dotenv(get_resource_path(r"../.env"))
+        if not os.path.exists(tools.get_resource_path(r"../.env")):
+            tools.create_file(r"..\.env", "HIGH_SCORE=0")  # create default .env file
+        load_dotenv(tools.get_resource_path(r"../.env"))
 
         if (hs := os.getenv("HIGH_SCORE")) is None:
-            update_env("HIGH_SCORE", "0")
+            tools.update_env("HIGH_SCORE", "0")
             hs = 0
         self._high_score = int(hs)
 
@@ -157,7 +157,7 @@ class SnakeGame:
         self._game_over = False
         self._key_pressed = False  # used to prevent multiple key presses per frame
         pg.display.set_caption(self.screen_title)
-        pg.display.set_icon(pg.image.load(get_resource_path(r"..\assets\images\icon.png")))
+        pg.display.set_icon(pg.image.load(tools.get_resource_path(r"..\assets\images\icon.png")))
 
         # Initialize sprites
         self._tail, self._head, self._food, self._top_menu = None, None, None, None
@@ -289,9 +289,9 @@ class SnakeGame:
         self._game_over = True
         self.pause()
         self._music.stop()
-        play_sound("death.wav", self.sfx_volume)
-        play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sfx_volume - 0.2)
-        update_env("HIGH_SCORE", str(self._high_score))
+        tools.play_sound("death.wav", self.sfx_volume)
+        tools.play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sfx_volume - 0.2)
+        tools.update_env("HIGH_SCORE", str(self._high_score))
         self._show_game_over_screen()
 
     def _show_game_over_screen(self) -> None:
@@ -391,13 +391,13 @@ class SnakeGame:
                                       max_dist=self._max_food_dist,
                                       head_pos=self._head.pos)
         self._add_sprites([self._food])
-        play_sound("eat.wav", self.sfx_volume)
+        tools.play_sound("eat.wav", self.sfx_volume)
 
     def run(self) -> None:
         """Runs the game loop"""
         screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1] + sprites.TILE_SIZE[1]))
         clock = pg.time.Clock()
-        background = pg.image.load(get_resource_path(r"..\assets\images\background.png"))
+        background = pg.image.load(tools.get_resource_path(r"..\assets\images\background.png"))
         self._music.play(-1)
         while True:
             clock.tick(self.fps)
