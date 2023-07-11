@@ -1,6 +1,7 @@
 import logging
 import sys
 import os
+import configparser
 
 from dotenv import load_dotenv
 import pygame as pg
@@ -9,7 +10,7 @@ import sprites
 import textoverlays
 import menus
 from queue_handler import Queue
-from tools import get_resource_path, get_sound, play_sound, initialize_env, update_env
+from tools import get_resource_path, get_sound, play_sound, update_env, create_file, get_ini_value
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,28 +40,113 @@ class SnakeGame:
         pg.K_SPACE: True
     }
 
-    def __init__(self,
-                 screen_size: tuple[int, int],
-                 title: str,
-                 fps: int) -> None:
+    CONFIG_PATH = get_resource_path(r"../config.ini")
+
+    PROFILES_PATH = get_resource_path(r"../profiles.ini")
+
+    def __init__(self, title: str) -> None:
         pg.init()
+
+        # Get parameters from config.ini
+        if not os.path.exists(self.CONFIG_PATH):
+            # Create default config values and .ini file if it doesn't exist already.
+            screen_size = 640, 480
+            difficulty = "medium"
+            master_volume = 1
+            sfx_volume = 1
+            music_volume = 1
+            config = configparser.ConfigParser()
+            config["SETTINGS"] = {
+                "screen_size": f"{screen_size[0]}, {screen_size[1]}",
+                "difficulty": difficulty,
+                "master_volume": master_volume,
+                "sfx_volume": sfx_volume,
+                "music_volume": music_volume
+            }
+            with open(self.CONFIG_PATH, "w") as f:
+                config.write(f)
+        else:
+            screen_size = get_ini_value(self.CONFIG_PATH, "SETTINGS", "screen_size").split(",")
+            screen_size = int(screen_size[0]), int(screen_size[1])
+            difficulty = get_ini_value(self.CONFIG_PATH, "SETTINGS", "difficulty")
+            master_volume = int(get_ini_value(self.CONFIG_PATH, "SETTINGS", "master_volume"))
+            sfx_volume = int(get_ini_value(self.CONFIG_PATH, "SETTINGS", "sfx_volume"))
+            music_volume = int(get_ini_value(self.CONFIG_PATH, "SETTINGS", "music_volume"))
+
+        # Check valid screen values
         if screen_size[0] > 896 or screen_size[1] > 640:
             raise ValueError("Maximum image size is 896x640.")
         elif screen_size[0] < 290 or screen_size[1] < 290:
             raise ValueError("Minimum image size is 290x290")
         if any((screen_size[i] % sprites.TILE_SIZE[i]) != 0 for i in range(2)):
-            raise ValueError(f"Screen sizes must be a multiple of the tile size: '{sprites.TILE_SIZE}'.")
-        self.screen_size = screen_size
+            raise ValueError(f"Screen sizes must be a multiple of the t<ile size: '{sprites.TILE_SIZE}'.")
+
+        # Check valid difficulty values
+        if difficulty not in ("easy", "medium", "hard"):
+            raise ValueError(f"Invalid difficulty value: '{difficulty}'."
+                             f" Valid values are 'easy', 'medium', and 'hard'.")
+
+        # Check valid volume values
+        if master_volume < 0:
+            raise ValueError(f"Invalid master volume value: '{master_volume}'."
+                             f"Volumes must be greater than 0.")
+        if sfx_volume < 0:
+            raise ValueError(f"Invalid sfx volume value: '{sfx_volume}'."
+                             f"Volumes must be greater than 0.")
+        if music_volume < 0:
+            raise ValueError(f"Invalid music volume value: '{music_volume}'."
+                             f"Volumes must be greater than 0.")
+
+        # Check valid fps value
+        fps = get_ini_value(self.PROFILES_PATH, difficulty, "fps")
+        if not fps:
+            match difficulty:
+                case "easy":
+                    fps = 6
+                case "medium":
+                    fps = 11
+                case "hard":
+                    fps = 16
+            logging.warning(f"Missing fps value for difficulty '{difficulty}'."
+                            f" Setting new default '{fps}'.")
+        else:
+            fps = int(fps)
+
+        # Check valid growth score value
+        growth_score = get_ini_value(self.PROFILES_PATH, difficulty, "growth_score")
+        if not growth_score:
+            match difficulty:
+                case "easy":
+                    growth_score = 1
+                case "medium":
+                    growth_score = 10
+                case "hard":
+                    growth_score = 20
+            logging.warning(f"Missing growth_score value for difficulty '{difficulty}'."
+                            f" Setting new default '{growth_score}'.")
+        else:
+            growth_score = int(growth_score)
+
+        # Config attributes
         self.screen_title = title
-        self.fps = fps
+        self.screen_size = screen_size
+        self.difficulty = difficulty
+        self._fps = fps
+        self._growth_score = growth_score
+
+        # Sound volumes and background music
+        self.master_volume = master_volume
+        self.sfx_volume = self.master_volume*sfx_volume*0.5
+        self.music_volume = self.master_volume*music_volume*0.15
+        self.music_title = "Abstraction - Three Red Hearts - Connected.wav"
+        self._music = get_sound(self.music_title, self.music_volume)
 
         # Scores
         self._current_score = 0
-        if os.path.isfile(get_resource_path("../snake/.env")):
-            load_dotenv(get_resource_path("../snake/.env"))
-        else:
-            os.environ["HIGH_SCORE"] = "0"
-            initialize_env()
+        if not os.path.exists(get_resource_path(r"../.env")):
+            create_file(r"..\.env", "HIGH_SCORE=0")  # create default .env file
+        load_dotenv(get_resource_path(r"../.env"))
+
         if (hs := os.getenv("HIGH_SCORE")) is None:
             update_env("HIGH_SCORE", "0")
             hs = 0
@@ -73,19 +159,9 @@ class SnakeGame:
         pg.display.set_caption(self.screen_title)
         pg.display.set_icon(pg.image.load(get_resource_path(r"..\assets\images\icon.png")))
 
-        # Sound volumes and background music
-        self.sound_volume = 0.5
-        self.music_volume = 0.15
-        self.music_title = "Abstraction - Three Red Hearts - Connected.wav"
-        self._background_music = get_sound(
-                self.music_title,
-                self.music_volume
-        )
-
         # Initialize sprites
         self._tail, self._head, self._food, self._top_menu = None, None, None, None
         self._initialize_sprites()
-
         self._pause_screen = None
 
     def _initialize_sprites(self):
@@ -93,23 +169,23 @@ class SnakeGame:
         self._tail = sprites.Tail((x - sprites.TILE_SIZE[0], y))
         self._head = sprites.Head((x, y), prev_segment=self._tail)
         self._top_menu = menus.TopBarMenu(
-                current_score=self._current_score,
-                high_score=self._high_score,
-                size=(self.screen_size[0], sprites.TILE_SIZE[1]),
+            current_score=self._current_score,
+            high_score=self._high_score,
+            size=(self.screen_size[0], sprites.TILE_SIZE[1]),
         )
         size = (self.screen_size[0] // 2, self.screen_size[1] // 2)
         self._settings_menu = menus.SettingsMenu(
-                pos=size,   # positioned middle of the screen
-                size=size,  # size half the screen
+            pos=size,  # positioned middle of the screen
+            size=size,  # size half the screen
         )
         self.snake_segments = []
 
         # Create food sprite at random position no closer than 5 tiles from the snake's head.
         self._max_food_dist = 5
         self._food = sprites.Food(
-                screen_size=self.screen_size,
-                max_dist=self._max_food_dist,
-                head_pos=self._head.pos)
+            screen_size=self.screen_size,
+            max_dist=self._max_food_dist,
+            head_pos=self._head.pos)
         self._sprite_group = sprites.SpriteGroup()
 
         # add to sprite group and snake_segment list
@@ -118,8 +194,18 @@ class SnakeGame:
 
     @property
     def snake_length(self) -> int:
-        """Returns the length of the snake."""
+        """Returns the current length of the snake. Has no setter"""
         return len(self.snake_segments)
+
+    @property
+    def fps(self) -> int:
+        """Returns the game fps. Has no setter"""
+        return self._fps
+
+    @property
+    def growth_score(self) -> int:
+        """Returns the score given when the snake eats and grows. Has no setter"""
+        return self._growth_score
 
     def _add_sprites(self, sprite_list: list[sprites.SnakeSegment | sprites.Food]) -> None:
         """Add given sprites to the sprite group and list."""
@@ -202,9 +288,9 @@ class SnakeGame:
         logging.info(f"Game over! Score: {self._current_score}, High score: {self._high_score}")
         self._game_over = True
         self.pause()
-        self._background_music.stop()
-        play_sound("death.wav", self.sound_volume)
-        play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sound_volume - 0.2)
+        self._music.stop()
+        play_sound("death.wav", self.sfx_volume)
+        play_sound("Arcade Retro Game Over Sound Effect💤 sounds.wav", self.sfx_volume - 0.2)
         update_env("HIGH_SCORE", str(self._high_score))
         self._show_game_over_screen()
 
@@ -212,9 +298,9 @@ class SnakeGame:
         """Creates the game over image."""
         # noinspection PyTypeChecker
         self._sprite_group.add(textoverlays.GameOverOverlay(
-                self._current_score,
-                self._high_score,
-                (self.screen_size[0] // 2, self.screen_size[1] // 2)
+            self._current_score,
+            self._high_score,
+            (self.screen_size[0] // 2, self.screen_size[1] // 2)
         ))
 
     def _show_pause_screen(self) -> None:
@@ -228,7 +314,7 @@ class SnakeGame:
         self._game_over = False
         self._pause = False
         self._current_score = 0
-        self._background_music.play(-1)
+        self._music.play(-1)
         # noinspection PyTypeChecker
         self._initialize_sprites()
         logging.info("Game restarted.")
@@ -287,7 +373,7 @@ class SnakeGame:
 
     def update_scores(self, amount: int = 1) -> None:
         """Updates the current score, and the high score if the current is higher."""
-        self._current_score += amount
+        self._current_score += amount*self.growth_score
         self._top_menu.current_score = self._current_score
         if self._current_score > self._high_score:
             self._high_score = self._current_score
@@ -305,14 +391,14 @@ class SnakeGame:
                                       max_dist=self._max_food_dist,
                                       head_pos=self._head.pos)
         self._add_sprites([self._food])
-        play_sound("eat.wav", self.sound_volume)
+        play_sound("eat.wav", self.sfx_volume)
 
     def run(self) -> None:
         """Runs the game loop"""
-        screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1]+sprites.TILE_SIZE[1]))
+        screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1] + sprites.TILE_SIZE[1]))
         clock = pg.time.Clock()
         background = pg.image.load(get_resource_path(r"..\assets\images\background.png"))
-        self._background_music.play(-1)
+        self._music.play(-1)
         while True:
             clock.tick(self.fps)
             self._key_pressed = False
