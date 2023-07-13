@@ -135,6 +135,14 @@ class SnakeGame:
         self._fps = fps
         self._growth_score = growth_score
 
+        # Screen surfaces
+        self.screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1] + sprites.TILE_SIZE[1]))
+        self.background = pg.image.load(tools.get_resource_path(r"..\assets\images\background.png"))
+
+        # Screen caption and icon
+        pg.display.set_caption(self.screen_title)
+        pg.display.set_icon(pg.image.load(tools.get_resource_path(r"..\assets\images\icon.png")))
+
         # Sound volumes and background music
         self.master_volume = master_volume
         self.sfx_volume = self.master_volume * sfx_volume * 0.5
@@ -166,14 +174,6 @@ class SnakeGame:
         self._food = None
         self._top_menu = None
         self._initialize_sprites()
-
-        # Screen surfaces
-        self.screen = pg.display.set_mode((self.screen_size[0], self.screen_size[1] + sprites.TILE_SIZE[1]))
-        self.background = pg.image.load(tools.get_resource_path(r"..\assets\images\background.png"))
-
-        # Screen caption and icon
-        pg.display.set_caption(self.screen_title)
-        pg.display.set_icon(pg.image.load(tools.get_resource_path(r"..\assets\images\icon.png")))
 
     def _initialize_sprites(self):
         """Initializes all game sprites and adds it to the sprite group. Also initializes a new Queue instance."""
