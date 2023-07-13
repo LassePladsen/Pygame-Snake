@@ -5,7 +5,7 @@ from tools import get_resource_path
 FONT_PATH = get_resource_path("../assets/fonts/ThaleahFat.ttf")
 
 
-class BaseTextOverlay(pg.sprite.Sprite):
+class TextOverlay(pg.sprite.Sprite):
     """Base class for text overlays for inheritance."""
 
     def __init__(self,
@@ -126,7 +126,7 @@ class BaseTextOverlay(pg.sprite.Sprite):
         return rect
 
 
-class GameOverOverlay(BaseTextOverlay):
+class GameOverOverlay(TextOverlay):
     """Game over screen class."""
 
     def __init__(self,
@@ -149,7 +149,7 @@ class GameOverOverlay(BaseTextOverlay):
         )
 
 
-class PauseOverlay(BaseTextOverlay):
+class PauseOverlay(TextOverlay):
     """Pause screen class."""
 
     def __init__(self,
