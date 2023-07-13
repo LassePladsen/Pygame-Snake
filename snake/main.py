@@ -2,9 +2,7 @@ from snakegame import SnakeGame
 
 
 def main() -> None:
-    game = SnakeGame(screen_size=(640, 480),
-                     title="Snake",
-                     fps=11)
+    game = SnakeGame(title="Snake")
     game.run()
 
 

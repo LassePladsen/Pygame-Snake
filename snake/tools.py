@@ -1,3 +1,4 @@
+import configparser
 import os
 import sys
 from random import randint
@@ -65,17 +66,11 @@ def create_file(file_path: str, content: str) -> None:
     with open(file_path, "w") as f:
         f.write(content)
 
-def initialize_env() -> None:
-    """Creates a .env file if it doesn't exist."""
-    if os.path.exists(".env"):
-        return
-    create_file(".env", "HIGH_SCORE=0")
-
 def update_env(key: str, value: str) -> None:
     """Updates the value of a key in the .env file."""
-    if not os.path.exists(".env"):
-        initialize_env()
-    with open(".env", "r") as f:
+    if not os.path.exists(r"..\.env"):
+        create_file(r"..\.env", "HIGH_SCORE=0")  # create default .env file
+    with open(r"..\.env", "r") as f:
         lines = f.readlines()
     for i, line in enumerate(lines):
         if line.startswith(key):
@@ -83,5 +78,17 @@ def update_env(key: str, value: str) -> None:
             break
     if not lines:  # empty
         lines.append(f"{key}={value}\n")
-    with open(".env", "w") as f:
+    with open(r"..\.env", "w") as f:
         f.writelines(lines)
+
+def get_ini_value(filepath: str, header: str, key: str) -> str | None:
+    """Returns the value of a key in the given .ini file. Returns None if not found.
+    Is case-insensitive."""
+    if not os.path.exists(filepath):  # file not found
+        return
+    config = configparser.ConfigParser()
+    config.read(filepath)
+    try:
+        return config[header.upper()][key.lower()]
+    except KeyError:  # header or key not found
+        return

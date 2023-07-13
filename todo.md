@@ -6,9 +6,9 @@
 - Add a restart button.
 - Add a pause button seperate from pressing 'escape'.
 - Add audio volume bar and music volume bar.
-- Implement config.ini file and parser
-    - fps+screen size config
-    - difficulty profiles
+- ~~Implement config.ini file and parser~~
+    - ~~fps+screen size config~~
+    - ~~difficulty profiles~~
     - current saved settings (difficulty, audio+music volume)
   
 - Fix bug where if the snake is long enough, its tail rotates a frame too late when turning.

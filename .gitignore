@@ -5,3 +5,5 @@ snake/testing.py
 Snake.spec
 snake/.env
 dist/Snake/Snake/.env
+test_config.ini
+__pycache__/
