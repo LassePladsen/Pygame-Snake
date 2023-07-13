@@ -6,6 +6,9 @@
 - Add a restart button.
 - Add a pause button seperate from pressing 'escape'.
 - Add audio volume bar and music volume bar.
+- ~~Implement settings menu and button~~
+  - Add the seperate settings buttons and/or sliders.
+  - Add a way to close the settings menu
 - ~~Implement config.ini file and parser~~
     - ~~fps+screen size config~~
     - ~~difficulty profiles~~
