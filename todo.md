@@ -8,11 +8,14 @@
 - Add audio volume bar and music volume bar.
 - ~~Implement settings menu and button~~
   - Add the seperate settings buttons and/or sliders.
-  - Add a way to close the settings menu
+  - ~~Add a way to close the settings menu~~
+    - ~~Closing by pressing escape~~
+    - Add a separate "close" button
+    - ~~Closing by clicking the settings button again~~
 - ~~Implement config.ini file and parser~~
     - ~~fps+screen size config~~
     - ~~difficulty profiles~~
-    - current saved settings (difficulty, audio+music volume)
+    - ~~current saved settings (difficulty, audio+music volume)~~
   
 - Fix bug where if the snake is long enough, its tail rotates a frame too late when turning.
 - (Add a main menu?)

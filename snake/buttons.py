@@ -1,5 +1,4 @@
 # todo:
-# - settings button.
 # - difficulty button on settings menu.
 # - volume bars on settings menu.
 
@@ -18,24 +17,32 @@ class Button(BaseSprite):
                  anchor: str = "center") -> None:
         super().__init__(size=size, pos=pos, anchor=anchor)
         self.type = button_type
-        self.image = None
+        self.nonhover_image = None
         self.hover_image = None
+        # noinspection PyTypeChecker
+        self.image = None
         self.was_hovered = False  # used to check if the button was hovered last frame
 
-
     def is_hovered(self, mouse_pos: tuple[int, int]) -> bool:
-        """Returns True if the mouse is hovering over the button."""
-        res = self.rect.collidepoint(mouse_pos)
-        self.was_hovered = res
-        return res
+        """Boolean return for if the given mouse position is hovering over the button."""
+        return self.rect.collidepoint(mouse_pos)
 
     def hover(self) -> None:
         """Called when the mouse is hovering over the button, brightens the button image."""
-        self.rect = self.hover_image.get_rect(center=self.rect.center)
+        # stop if the button has no hover image or is already hovered
+        if (self.hover_image is None) or self.was_hovered:
+            return
+        self.image = self.hover_image
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.was_hovered = True
 
     def unhover(self) -> None:
         """Called when the mouse is no longer hovering over the button, resets the button image."""
+        if self.hover_image is None:
+            return
+        self.image = self.nonhover_image
         self.rect = self.image.get_rect(center=self.rect.center)
+        self.was_hovered = False
 
 
 class ImageButton(Button):
@@ -52,17 +59,17 @@ class ImageButton(Button):
         self.size = size
         self.image_path = image_path
         self.bg_color = bg_color
-
         if bg_color:  # todo?
             raise NotImplementedError("Background color for buttons not yet implemented.")
 
         # normal button
-        self.image = load_image(self.image_path, self.size)
+        self.nonhover_image = load_image(self.image_path, self.size)
+        self.image = self.nonhover_image
         self.rect = self.get_rect(pos, anchor)
 
         # mouse hover button
-        self.hover_image = self.image.convert_alpha()
-        self.hover_image.fill("white", special_flags=pg.BLEND_RGBA_MULT)
+        self.image_hover_path = self.image_path.replace(".png", "_hover.png")
+        self.hover_image = load_image(self.image_hover_path, self.size)
 
 class SettingsButton(ImageButton):
     """Settings button class."""

@@ -175,6 +175,9 @@ class SnakeGame:
         self._top_menu = None
         self._initialize_sprites()
 
+        # Show pause screen at start
+        self.pause()
+
     def _initialize_sprites(self):
         """Initializes all game sprites and adds it to the sprite group. Also initializes a new Queue instance."""
         # Snake head and tail:
@@ -336,6 +339,20 @@ class SnakeGame:
                 (self.screen_size[0] // 2, self.screen_size[1] // 2)
         ))
 
+    def _show_settings_menu(self) -> None:
+        """Shows the settings menu."""
+        self._pause = True
+        self._settings_showing = True
+        # noinspection PyTypeChecker
+        self._sprite_group.add(self._settings_menu)
+
+    def _hide_settings_menu(self) -> None:
+        """Hides the settings menu."""
+        self._pause = False
+        self._settings_showing = False
+        # noinspection PyTypeChecker
+        self._sprite_group.remove(self._settings_menu)
+
     def restart(self) -> None:
         """Restarts the game and resets all values except high score."""
         self._game_over = False
@@ -353,7 +370,7 @@ class SnakeGame:
         self._head.direction = direction
 
     def _handle_events(self) -> None:
-        """Handles all pygame events such as quitting, key presses, mouse hovering and clicks."""
+        """Handles all game events such as quitting, key presses, mouse hovering and mouse clicks."""
         events = pg.event.get()
         mouse_pos = pg.mouse.get_pos()
         for event in events:
@@ -368,35 +385,37 @@ class SnakeGame:
 
     def _handle_key_press(self, key: int) -> None:
         """Handles key presses."""
-        if key == pg.K_ESCAPE:  # _pause or resume the game
-            self.unpause() if self._pause else self.pause()
-        elif key in self.DIRECTION_KEYS:
+        if key == pg.K_ESCAPE:  # pause/unpause the game, hide settings menu if its showing
+            if self._settings_showing:
+                self._hide_settings_menu()  # also unpauses the game
+            elif not self._pause:
+                self.pause()
+        elif key in self.DIRECTION_KEYS and not self._settings_showing:
             frames = 1 if self._key_pressed else 0
             self.queue.add(frames, [(self, f"turn('{self.DIRECTION_KEYS[key]}')")])
+            self._key_pressed = True
             if self._pause:
                 self.unpause()
-            self._key_pressed = True
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
-        # unpause for any other key press too
-        elif self._pause:
+            return
+        # also unpause the game for ANY key press if the settings menu isnt showing
+        elif self._pause and not self._settings_showing:
             self.unpause()
 
     def _handle_mouse_press(self, mouse_pos: tuple[int, int]) -> None:
         """Handles mouse clicks."""
         for button_type, button in self.buttons.items():
-            if button.is_hovered(mouse_pos):
-                match button_type:
-                    case "settings":
-                        self._pause = True
-                        self._settings_showing = True
-                        # noinspection PyTypeChecker
-                        self._sprite_group.add(self._settings_menu)
-                    case "_":
-                        raise NotImplementedError(f"Button type '{button_type}' is not yet implemented.")
-            elif button.was_hovered:  # was hovered last frame -> unhover the button this frame
-                button.unhover()
-
+            if not button.is_hovered(mouse_pos):
+                continue
+            match button_type:
+                case "settings":
+                    if self._settings_showing:
+                        self._hide_settings_menu()
+                    else:
+                        self._show_settings_menu()
+                case "_":
+                    raise NotImplementedError(f"Button type '{button_type}' is not yet implemented.")
 
     def _handle_mouse_hovering(self, mouse_pos: tuple[int, int]) -> None:
         """Handles mouse hovering."""
@@ -414,17 +433,18 @@ class SnakeGame:
 
     def handle_collision(self) -> None:
         """Checks any collisions between all the sprites and handle the collision logic.
-            Head + (Body or tail)-> Game Over
+            Head + (Body or tail) -> Game Over
             Head + Food -> Grow snake and replace with new food at random position."""
         for i, segment in enumerate(self.snake_segments[1:]):  # check for collision with body or tail
-            if self._head.rect.colliderect(segment.rect):
-                if i == 1:  # should not be possible to turn in towards the second segment
-                    self._head.direction = segment.direction
-                else:
-                    self.game_over()
-                    # remove that body part to stop the head from dissapearing
-                    self._sprite_group.remove(self.snake_segments[i + 1])
-                    return
+            if not self._head.rect.colliderect(segment.rect):
+                continue
+            if i == 1:  # should not be possible to turn in towards the second segment
+                self._head.direction = segment.direction
+            else:
+                self.game_over()
+                # remove that body part to stop the head from dissapearing
+                self._sprite_group.remove(self.snake_segments[i + 1])
+                return
         if self._head.rect.colliderect(self._food.rect):
             self.eat()
 
