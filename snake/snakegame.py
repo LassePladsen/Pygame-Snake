@@ -162,7 +162,7 @@ class SnakeGame:
         self._high_score = int(hs)
 
         # Game states
-        self._pause = True  # game starts paused until user presses a button
+        self._paused = True  # game starts paused until user presses a button
         self._game_over = False  # whether the player is dead
         self._key_pressed = False  # used to prevent multiple key presses per frame
         self._settings_showing = False  # whether the settings menu is showing
@@ -308,7 +308,7 @@ class SnakeGame:
 
     def pause(self) -> None:
         """Pauses the game."""
-        self._pause = True
+        self._paused = True
         if not self._game_over:
             logging.info("Pausing game.")
             self._sprite_group.add(self._pause_screen)  # show pause screen
@@ -316,7 +316,7 @@ class SnakeGame:
     def unpause(self) -> None:
         """ Unpauses the game."""
         logging.info("unpausing game.")
-        self._pause = False
+        self._paused = False
         self._sprite_group.remove(self._pause_screen)
 
     def game_over(self) -> None:
@@ -341,14 +341,14 @@ class SnakeGame:
 
     def _show_settings_menu(self) -> None:
         """Shows the settings menu."""
-        self._pause = True
+        self._paused = True
         self._settings_showing = True
         # noinspection PyTypeChecker
         self._sprite_group.add(self._settings_menu)
 
     def _hide_settings_menu(self) -> None:
         """Hides the settings menu."""
-        self._pause = False
+        self._paused = False
         self._settings_showing = False
         # noinspection PyTypeChecker
         self._sprite_group.remove(self._settings_menu)
@@ -356,7 +356,7 @@ class SnakeGame:
     def restart(self) -> None:
         """Restarts the game and resets all values except high score."""
         self._game_over = False
-        self._pause = False
+        self._paused = False
         self._current_score = 0
         self._music.play(-1)
         # noinspection PyTypeChecker
@@ -388,19 +388,19 @@ class SnakeGame:
         if key == pg.K_ESCAPE:  # pause/unpause the game, hide settings menu if its showing
             if self._settings_showing:
                 self._hide_settings_menu()  # also unpauses the game
-            elif not self._pause:
-                self.pause()
+            else:
+                self.unpause() if self._paused else self.pause()
         elif key in self.DIRECTION_KEYS and not self._settings_showing:
             frames = 1 if self._key_pressed else 0
             self.queue.add(frames, [(self, f"turn('{self.DIRECTION_KEYS[key]}')")])
             self._key_pressed = True
-            if self._pause:
+            if self._paused:
                 self.unpause()
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
             return
         # also unpause the game for ANY key press if the settings menu isnt showing
-        elif self._pause and not self._settings_showing:
+        elif self._paused and not self._settings_showing:
             self.unpause()
 
     def _handle_mouse_press(self, mouse_pos: tuple[int, int]) -> None:
@@ -478,7 +478,7 @@ class SnakeGame:
             clock.tick(self.fps)
             self._key_pressed = False
             self._handle_events()
-            if not self._pause and not self._game_over:
+            if not self._paused and not self._game_over:
                 self.queue.handle()
                 self.queue.update()
                 self._head.move()
