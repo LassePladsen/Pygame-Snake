@@ -6,3 +6,4 @@ Snake.spec
 dist/Snake/.env
 dist/Snake/config.ini
 test_config.ini
+.env
