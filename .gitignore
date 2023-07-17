@@ -3,7 +3,7 @@ assets/images/fruit_sprites
 scripts/pyinstaller_work/
 snake/testing.py
 Snake.spec
-.env
 dist/Snake/.env
 dist/Snake/config.ini
 test_config.ini
+.env
