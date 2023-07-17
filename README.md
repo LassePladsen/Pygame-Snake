@@ -11,5 +11,5 @@ Currently under development in the dev branch.
 - See requirements.txt for external libraries.
 
 ## Building the executable with pyinstaller:
-Run ´scripts/build.bat´, you will get security alert error if your pyinstaller won't allow storing files outside the dist directory.
+Run `scripts/build.bat`, you will get security alert error if your pyinstaller won't allow storing files outside the dist directory.
 See the comment by 'htgoebel' on https://github.com/pyinstaller/pyinstaller/issues/2641 to implement a temporary fix.
