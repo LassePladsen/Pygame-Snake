@@ -10,7 +10,6 @@
   - Add the seperate settings buttons and/or sliders.
   - ~~Add a way to close the settings menu~~
     - ~~Closing by pressing escape~~
-    - Add a separate "close" button
     - ~~Closing by clicking the settings button again~~
 - ~~Implement config.ini file and parser~~
     - ~~fps+screen size config~~

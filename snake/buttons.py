@@ -1,11 +1,9 @@
-# todo:
-# - difficulty button on settings menu.
-# - volume bars on settings menu.
-
 import pygame as pg
+from pygame_widgets.slider import Slider
 
 from sprites import BaseSprite, load_image
 from tools import get_resource_path
+
 
 class Button(BaseSprite):
     """Base button class for inheritance."""
@@ -71,6 +69,7 @@ class ImageButton(Button):
         self.image_hover_path = self.image_path.replace(".png", "_hover.png")
         self.hover_image = load_image(self.image_hover_path, self.size)
 
+
 class SettingsButton(ImageButton):
     """Settings button class."""
 
@@ -86,3 +85,23 @@ class SettingsButton(ImageButton):
                          bg_color=bg_color,
                          button_type="settings")
 
+
+class VolumeSlider(Slider):
+    """Volume slider class."""
+
+    def __init__(self,
+                 surface: pg.Surface,
+                 pos: tuple[int, int],
+                 size: tuple[int, int],
+                 step: int = 1) -> None:
+        """pos is the position of the top left corner. """
+        super().__init__(win=surface,
+                         x=pos[0],
+                         y=pos[1],
+                         width=size[0],
+                         height=size[1],
+                         min=0,
+                         max=100,
+                         step=step,
+                         initial=100  # todo get initial from saved config.ini
+                         )

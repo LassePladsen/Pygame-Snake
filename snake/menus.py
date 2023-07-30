@@ -37,7 +37,7 @@ class SettingsMenu(TextOverlay):
     def __init__(self,
                  pos: tuple[int, int],
                  size: tuple[int, int],
-                 title_font_size: int = 70,
+                 title_font_size: int = 62,
                  settings_font_size: int = 20,
                  font_color: str | tuple[int, int, int] = "black",
                  bg_color: str | tuple[int, int, int] = "gray") -> None:
