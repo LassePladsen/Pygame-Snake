@@ -5,6 +5,7 @@ import configparser
 
 from dotenv import load_dotenv
 import pygame as pg
+import pygame_widgets as pg_widgets
 
 import sprites
 import textoverlays
@@ -47,6 +48,7 @@ class SnakeGame:
 
     def __init__(self, title: str) -> None:
         pg.init()
+        self.events = pg.event.get()
 
         # Get parameters from config.ini
         if not os.path.exists(self.CONFIG_PATH):
@@ -203,7 +205,7 @@ class SnakeGame:
         )
         settings_menu_size = (self.screen_size[0] // 2, self.screen_size[1] // 2)  # size half the screen
         self._settings_menu = menus.SettingsMenu(
-                pos=settings_menu_size,   # positioned middle of the screen
+                pos=settings_menu_size,   # also positioned middle of the screen
                 size=settings_menu_size,
         )
 
@@ -371,9 +373,9 @@ class SnakeGame:
 
     def _handle_events(self) -> None:
         """Handles all game events such as quitting, key presses, mouse hovering and mouse clicks."""
-        events = pg.event.get()
+        self.events = pg.event.get()
         mouse_pos = pg.mouse.get_pos()
-        for event in events:
+        for event in self.events:
             match event.type:
                 case pg.QUIT:
                     quit_game()
@@ -429,6 +431,7 @@ class SnakeGame:
         """Updates the screen surface."""
         self.screen.blit(self.background, (0, sprites.TILE_SIZE[1]))
         self._sprite_group.draw(self.screen)
+        pg_widgets.update(self.events)
         pg.display.update()
 
     def handle_collision(self) -> None:
@@ -474,6 +477,7 @@ class SnakeGame:
         """Runs the game loop"""
         clock = pg.time.Clock()
         self._music.play(-1)
+        test = buttons.VolumeSlider(self.screen, (50,50), (100, 10))  # todo: fiks slider
         while True:
             clock.tick(self.fps)
             self._key_pressed = False

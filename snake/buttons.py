@@ -94,7 +94,7 @@ class VolumeSlider(Slider):
                  pos: tuple[int, int],
                  size: tuple[int, int],
                  step: int = 1) -> None:
-        """pos is the position of the top left corner. """
+        """'pos' is the position of the top left corner. """
         super().__init__(win=surface,
                          x=pos[0],
                          y=pos[1],
