@@ -7,7 +7,7 @@
 - Add a pause button seperate from pressing 'escape'.
 - Add audio volume bar and music volume bar.
   - Fix/finish the slider implementation
-  - Mute by pressing 'm'
+  - ~~Mute by pressing 'm'~~
 - ~~Implement settings menu and button~~
   - Add the seperate settings buttons and/or sliders.
   - ~~Add a way to close the settings menu~~

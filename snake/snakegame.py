@@ -37,10 +37,14 @@ class SnakeGame:
         pg.K_d: "right"
     }
 
-    RESTART_KEYS = {  # Mapping key presses to restart
-        pg.K_RETURN: True,
-        pg.K_SPACE: True
-    }
+    RESTART_KEYS = [  # Accepted key presses to restart game
+        pg.K_RETURN,
+        pg.K_SPACE
+    ]
+
+    MUTE_KEYS = [  # Mapping key presses to mute audio
+        pg.K_m
+    ]
 
     CONFIG_PATH = tools.get_resource_path(r"../config.ini")
 
@@ -99,6 +103,7 @@ class SnakeGame:
         if music_volume < 0:
             raise ValueError(f"Invalid music volume value: '{music_volume}'."
                              f"Volumes must be greater than 0.")
+        self._muted = 0
 
         # Check valid fps value
         fps = tools.get_ini_value(self.PROFILES_PATH, difficulty, "fps")
@@ -146,11 +151,11 @@ class SnakeGame:
         pg.display.set_icon(pg.image.load(tools.get_resource_path(r"..\assets\images\icon.png")))
 
         # Sound volumes and background music
-        self.master_volume = master_volume
-        self.sfx_volume = self.master_volume * sfx_volume * 0.5
-        self.music_volume = self.master_volume * music_volume * 0.15
+        self._master_volume = master_volume
+        self._sfx_volume = self.master_volume * sfx_volume * 0.5
+        self._music_volume = self.master_volume * music_volume * 0.15
         self.music_title = "Abstraction - Three Red Hearts - Connected.wav"
-        self._music = tools.get_sound(self.music_title, self.music_volume)
+        self._music = tools.get_sound(self.music_title, self._music_volume)
 
         # Scores
         self._current_score = 0
@@ -241,6 +246,38 @@ class SnakeGame:
     def growth_score(self) -> int:
         """Returns the score given when the snake eats and grows. Has no setter"""
         return self._growth_score
+
+    @property
+    def master_volume(self) -> float:
+        """Returns the master volume"""
+        return self._master_volume
+
+    @master_volume.setter
+    def master_volume(self, value: float) -> None:
+        """Sets the master volume and updates all other volumes accordingly"""
+        self._master_volume = value
+        self.sfx_volume = self._sfx_volume
+        self.music_volume = self._music_volume
+
+    @property
+    def sfx_volume(self) -> float:
+        """Returns the sfx volume"""
+        return self._sfx_volume
+
+    @sfx_volume.setter
+    def sfx_volume(self, value: float) -> None:
+        """Sets the sfx volume"""
+        self._sfx_volume = self.master_volume * value
+
+    @property
+    def music_volume(self) -> float:
+        """Returns the music volume"""
+        return self._music_volume
+
+    @music_volume.setter
+    def music_volume(self, value: float) -> None:
+        """Sets the music volume"""
+        self._music_volume = self.master_volume * value
 
     def _add_sprites(self, sprite_list: list[sprites.SnakeSegment | sprites.Food]) -> None:
         """Add given sprites to the sprite group and corresponding list."""
@@ -401,6 +438,11 @@ class SnakeGame:
         elif key in self.RESTART_KEYS and self._game_over:
             self.restart()
             return
+        elif key in self.MUTE_KEYS:
+            if self._muted:
+                self.unmute()
+            else:
+                self.mute()
         # also unpause the game for ANY key press if the settings menu isnt showing
         elif self._paused and not self._settings_showing:
             self.unpause()
@@ -433,6 +475,18 @@ class SnakeGame:
         self._sprite_group.draw(self.screen)
         pg_widgets.update(self.events)
         pg.display.update()
+
+    def mute(self):
+        """Mutes the game and music audio."""
+        self._muted = True
+        self.master_volume = 0
+        self._music.stop()
+
+    def unmute(self):
+        """Unmutes the game and music audio."""
+        self._muted = False
+        self.master_volume = 1
+        self._music.play(-1)
 
     def handle_collision(self) -> None:
         """Checks any collisions between all the sprites and handle the collision logic.
